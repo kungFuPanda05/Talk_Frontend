@@ -4,6 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 const apiError = (err) => {
   if (err?.response?.data.messages) {
+    console.log("Inside the api error", err.response.data.messages);
     let error = err.response.data.messages;
       for (let i = 0; i < error.length; i++) {
         toast.error(error[i], {

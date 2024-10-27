@@ -11,8 +11,7 @@ import {
  } from "@mui/material";
 import { Check, Male, Female, Shuffle } from "@mui/icons-material";
 
-const RandConnect = () => {
-    const [selectedGender, setSelectedGender] = useState(null);
+const RandConnect = ({setRandomConnect, selectedGender, setSelectedGender}) => {
     const [language, setLanguage] = useState('English');
     const [region, setRegion] = useState('Global (Free)');
 
@@ -44,30 +43,30 @@ const RandConnect = () => {
                 {/* Gender Icons */}
                 <Box style={styles.iconBox}>
                     <Box 
-                        style={{ ...styles.iconItem, borderColor: selectedGender === 'male' ? 'blue' : 'lightgray' }}
-                        onClick={() => handleGenderSelect('male')}
+                        style={{ ...styles.iconItem, borderColor: selectedGender === 'M' ? 'blue' : 'lightgray' }}
+                        onClick={() => handleGenderSelect('M')}
                     >
                         <Male style={styles.icon} />
                         <Typography variant="caption">10P</Typography>
-                        {selectedGender === 'male' && <Check style={styles.checkIcon} />}
+                        {selectedGender === 'M' && <Check style={styles.checkIcon} />}
                         <Typography>Male</Typography>
                     </Box>
                     <Box 
-                        style={{ ...styles.iconItem, borderColor: selectedGender === 'female' ? 'blue' : 'lightgray' }}
-                        onClick={() => handleGenderSelect('female')}
+                        style={{ ...styles.iconItem, borderColor: selectedGender === 'F' ? 'blue' : 'lightgray' }}
+                        onClick={() => handleGenderSelect('F')}
                     >
                         <Female style={styles.icon} />
                         <Typography variant="caption">10P</Typography>
-                        {selectedGender === 'female' && <Check style={styles.checkIcon} />}
+                        {selectedGender === 'F' && <Check style={styles.checkIcon} />}
                         <Typography>Female</Typography>
                     </Box>
                     <Box 
-                        style={{ ...styles.iconItem, borderColor: selectedGender === 'random' ? 'blue' : 'lightgray' }}
-                        onClick={() => handleGenderSelect('random')}
+                        style={{ ...styles.iconItem, borderColor: selectedGender === 'R' ? 'blue' : 'lightgray' }}
+                        onClick={() => handleGenderSelect('R')}
                     >
                         <Shuffle style={styles.icon} />
                         <Typography variant="caption">0P</Typography>
-                        {selectedGender === 'random' && <Check style={styles.checkIcon} />}
+                        {selectedGender === 'R' && <Check style={styles.checkIcon} />}
                         <Typography>Random</Typography>
                     </Box>
                 </Box>
@@ -117,7 +116,7 @@ const RandConnect = () => {
                 {/* Buttons */}
                 <Box style={styles.buttonBox}>
                     <Button variant="contained" color="primary">Buy Voucher</Button>
-                    <Button variant="contained" color="secondary">Start</Button>
+                    <Button onClick={()=>setRandomConnect(true)} variant="contained" color="secondary">Start</Button>
                 </Box>
             </Box>
         </div>
