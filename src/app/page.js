@@ -1,4 +1,6 @@
-import React from "react";
+'use client'
+
+import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
   Grid,
@@ -14,9 +16,100 @@ import {
   IconButton,
 } from "@mui/material";
 import { Search, AttachFile, InsertEmoticon, Send } from "@mui/icons-material";
-import RandConnect from "@/components/randConnect";
+import RandConnect from "@/components/RandConnect";
+import Cookies from "js-cookie";
+import io from 'socket.io-client'
+import api from "@/utils/api";
+import apiError from "@/utils/apiError";
+import NormalChat from "@/components/NormalChat";
+
 
 export default function Home() {
+
+  const [normalConnect, setNormalConnect] = useState(false);
+  const [randomConnect, setRandomConnect] = useState(false);
+  const [selectedGender, setSelectedGender] = useState('M');
+  const [normalMessageList, setNormalMessageList] = useState([]);
+  const [randomMessageList, setRandomMessageList] = useState([]);
+  const [selfId, setSelfId] = useState("");
+  const [chats, setChats] = useState([]);
+  const [selectedChat, setSelectedChat] = useState("");
+  const [messageContent, setMessageContent] = useState("");
+
+  const normalSocketRef = useRef();
+  const socketRef = useRef();
+  const token = Cookies.get('token');
+
+  const fetchUserId = async () => {
+    try {
+      let response = await api.get('/api/user/getId');
+      setSelfId(response.data.result);
+    } catch (error) {
+      apiError(error);
+    }
+  }
+  const fetchChats = async () => {
+    try {
+      let response = await api.get('/api/chat/chat-list');
+      setChats(response.data.result);
+    } catch (error) {
+      apiError(error);
+    }
+  }
+  useEffect(() => {
+    fetchUserId();
+    fetchChats();
+  }, []);
+
+  useEffect(() => {
+    if (randomConnect && token) {
+      socketRef.current = io(`${process.env.NEXT_PUBLIC_API_URL}/random-chat`, {
+        extraHeaders: {
+          Authorization: `Bearer ${token}` // Pass JWT token here
+        }
+      });
+      socketRef.current.on('connect', () => {
+        console.log("The connection has bee established");
+        socketRef.current.emit('gender', { gwant: selectedGender });
+        socketRef.current.on('message', (message) => {
+          console.log("The message received is: ", message);
+          console.log("The message list is: ", randomMessageList);
+          setRandomMessageList((prevState) => [...prevState, message]);
+        })
+      })
+
+      return () => {
+        if (socketRef?.current) {
+          socketRef.current.disconnect();
+          console.log("Disconnected from random chat");
+        }
+      };
+    }
+  }, [randomConnect, token]);
+
+
+  const sendMessage = () => {
+    if (!messageContent) return;
+    socketRef.current.emit("message", { messageContent });
+    setMessageContent("");
+  };
+
+
+  useEffect(() => {
+    console.log("The selectedChatID is: ", selectedChat);
+  }, [selectedChat])
+
+
+  const handleChatSelect = (chatId) => {
+    setSelectedChat(chatId);
+    setChats((prevState) => {
+      return prevState.map((chat) =>
+        chat.id === chatId ? { ...chat, newMessageCount: 0 } : chat
+      );
+    });
+    setNormalConnect(true);
+  }
+
   return (
     <Box className="container">
       <Box className="chatWrapper">
@@ -34,32 +127,26 @@ export default function Home() {
             </IconButton>
           </Paper>
 
-          {/* Contact List */}
+          {/* Chat List */}
           <List>
-            {[
-              { name: "Marie Horwitz", message: "Hello, Are you there?", time: "Just now", count: 3, avatar: "/img1.png" },
-              { name: "Alexa Chung", message: "Lorem ipsum dolor sit.", time: "5 mins ago", count: 2, avatar: "/img2.png" },
-              { name: "Danny McChain", message: "Lorem ipsum dolor sit.", time: "Yesterday", count: 0, avatar: "/img3.png" },
-              { name: "Ashley Olsen", message: "Lorem ipsum dolor sit.", time: "Yesterday", count: 0, avatar: "/img4.png" },
-              { name: "Kate Moss", message: "Lorem ipsum dolor sit.", time: "Yesterday", count: 0, avatar: "/img5.png" },
-            ].map((contact, index) => (
-              <ListItem key={index} className="contactListItem">
+            {chats?.map((chat, index) => (
+              <ListItem key={index} className="contactListItem" onClick={() => handleChatSelect(chat.id)}>
                 <ListItemAvatar>
                   <Badge
-                    badgeContent={contact.count > 0 ? contact.count : null}
+                    badgeContent={chat.newMessageCount > 0 ? chat.newMessageCount : null}
                     color="error"
                   >
-                    <Avatar alt={contact.name} src={contact.avatar} />
+                    <Avatar alt={chat.chatName} src={chat.avatar} />
                   </Badge>
                 </ListItemAvatar>
                 <ListItemText
-                  primary={contact.name}
-                  secondary={contact.message}
+                  primary={chat.chatName}
+                  secondary={chat.Last_Message?.content}
                   primaryTypographyProps={{ className: "contactName" }}
                   secondaryTypographyProps={{ className: "contactMessage" }}
                 />
                 <Typography className="contactTime">
-                  {contact.time}
+                  {chat.Last_Message?.createdAt.split('T')[0]}
                 </Typography>
               </ListItem>
             ))}
@@ -68,63 +155,47 @@ export default function Home() {
 
         {/* Chat Area */}
         <Grid item xs={8} className="chatArea">
-            <RandConnect/>
-          {/* <div style={{height: '100%'}}> */}
-            {/* <Box className="chatMessages">
-              <Box className="messageRow">
-                <Avatar src="/img1.png" className="avatar" />
-                <Box>
-                  <Typography className="messageBubble">
-                    Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                    laboris nisi ut aliquip ex ea commodo consequat.
-                  </Typography>
-                  <Typography variant="caption" className="messageTime">
-                    12:00 PM | Aug 13
-                  </Typography>
-                </Box>
+          {selectedChat ? (
+            <NormalChat selectedChat={selectedChat} selfId={selfId} normalMessageList={normalMessageList} setNormalMessageList={setNormalMessageList} />
+          ) : randomConnect ? (
+            <div style={{ height: '100%' }}>
+              <Box className="chatMessages">
+                {randomMessageList?.map((message) => (
+                  <Box className={`messageRow ${selfId == message.userId ? "messageRowEnd" : ""}`}>
+                    {selfId != message.userId && <Avatar src="/img1.png" className="avatar" />}
+                    <Box>
+                      <Typography className={selfId == message.userId ? "messageBubbleSent" : "messageBubble"}>
+                        {message.content}
+                      </Typography>
+                      <Typography variant="caption" className="messageTime">
+                        12:00 PM | Aug 13
+                      </Typography>
+                    </Box>
+                  </Box>
+                ))}
               </Box>
-
-              <Box className="messageRow messageRowEnd">
-                <Box>
-                  <Typography className="messageBubbleSent">
-                    Excepteur sint occaecat cupidatat non proident, sunt in culpa
-                    qui officia deserunt mollit anim id est laborum.
-                  </Typography>
-                  <Typography variant="caption" className="messageTime">
-                    12:00 PM | Aug 13
-                  </Typography>
-                </Box>
-                <Avatar src="/img1.png" className="avatar" />
+              <Box className="chatInputWrapper">
+                <Avatar src="/img1.png" />
+                <InputBase className="chatInput" placeholder="Type message" value={messageContent} onChange={(e) => setMessageContent(e.target.value)} />
+                <IconButton>
+                  <AttachFile />
+                </IconButton>
+                <IconButton>
+                  <InsertEmoticon />
+                </IconButton>
+                <IconButton onClick={sendMessage}>
+                  <Send />
+                </IconButton>
               </Box>
+            </div>
+          ) : (
+            <RandConnect
+              setRandomConnect={setRandomConnect}
+              selectedGender={selectedGender}
+              setSelectedGender={setSelectedGender}
+            />
+          )}
 
-              <Box className="messageRow">
-                <Avatar src="/img1.png" className="avatar" />
-                <Box>
-                  <Typography className="messageBubble">
-                    Sed ut perspiciatis unde omnis iste natus error sit voluptatem.
-                  </Typography>
-                  <Typography variant="caption" className="messageTime">
-                    12:00 PM | Aug 13
-                  </Typography>
-                </Box>
-              </Box>
-            </Box> */}
-
-            {/* <Box className="chatInputWrapper">
-              <Avatar src="/img1.png" />
-              <InputBase className="chatInput" placeholder="Type message" />
-              <IconButton>
-                <AttachFile />
-              </IconButton>
-              <IconButton>
-                <InsertEmoticon />
-              </IconButton>
-              <IconButton>
-                <Send />
-              </IconButton>
-            </Box> */}
-
-          {/* </div> */}
         </Grid>
       </Box>
     </Box>
