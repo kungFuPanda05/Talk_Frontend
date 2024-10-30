@@ -1,0 +1,31 @@
+$primary-color: #007bff;
+
+.navbar{
+    // border: 2px solid purple;
+    height: var(--navbar-height);
+    display: flex;
+    align-items: center;
+}
+.innernavbar{
+    height: 60%;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+    padding-left: 10px;
+    padding-right: 20px;
+    position: relative;
+    @media (max-width: 400px) {
+        padding: 0;
+      }
+    // border: 2px solid green;
+    .left{
+        display: flex;
+        height: 100%;
+        align-items: center;
+        div{
+            margin-left: 8px;
+            margin-right: 5px;
+        }
+    }
+}

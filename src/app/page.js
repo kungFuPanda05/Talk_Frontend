@@ -22,6 +22,9 @@ import io from 'socket.io-client'
 import api from "@/utils/api";
 import apiError from "@/utils/apiError";
 import NormalChat from "@/components/NormalChat";
+import NavBar from "@/components/NavBar";
+import styles from '../styles/chat.module.scss'
+import ChatBox from "@/components/ChatBox";
 
 
 export default function Home() {
@@ -111,93 +114,16 @@ export default function Home() {
   }
 
   return (
-    <Box className="container">
-      <Box className="chatWrapper">
-        {/* Left Sidebar */}
-        <Grid item xs={4} className="sidebar">
-          {/* Search bar */}
-          <Paper component="form" className="searchBar">
-            <InputBase
-              className="searchInput"
-              placeholder="Search"
-              inputProps={{ "aria-label": "search" }}
-            />
-            <IconButton type="submit" aria-label="search">
-              <Search />
-            </IconButton>
-          </Paper>
-
-          {/* Chat List */}
-          <List>
-            {chats?.map((chat, index) => (
-              <ListItem key={index} className="contactListItem" onClick={() => handleChatSelect(chat.id)}>
-                <ListItemAvatar>
-                  <Badge
-                    badgeContent={chat.newMessageCount > 0 ? chat.newMessageCount : null}
-                    color="error"
-                  >
-                    <Avatar alt={chat.chatName} src={chat.avatar} />
-                  </Badge>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={chat.chatName}
-                  secondary={chat.Last_Message?.content}
-                  primaryTypographyProps={{ className: "contactName" }}
-                  secondaryTypographyProps={{ className: "contactMessage" }}
-                />
-                <Typography className="contactTime">
-                  {chat.Last_Message?.createdAt.split('T')[0]}
-                </Typography>
-              </ListItem>
-            ))}
-          </List>
-        </Grid>
-
-        {/* Chat Area */}
-        <Grid item xs={8} className="chatArea">
-          {selectedChat ? (
-            <NormalChat selectedChat={selectedChat} selfId={selfId} normalMessageList={normalMessageList} setNormalMessageList={setNormalMessageList} />
-          ) : randomConnect ? (
-            <div style={{ height: '100%' }}>
-              <Box className="chatMessages">
-                {randomMessageList?.map((message) => (
-                  <Box className={`messageRow ${selfId == message.userId ? "messageRowEnd" : ""}`}>
-                    {selfId != message.userId && <Avatar src="/img1.png" className="avatar" />}
-                    <Box>
-                      <Typography className={selfId == message.userId ? "messageBubbleSent" : "messageBubble"}>
-                        {message.content}
-                      </Typography>
-                      <Typography variant="caption" className="messageTime">
-                        12:00 PM | Aug 13
-                      </Typography>
-                    </Box>
-                  </Box>
-                ))}
-              </Box>
-              <Box className="chatInputWrapper">
-                <Avatar src="/img1.png" />
-                <InputBase className="chatInput" placeholder="Type message" value={messageContent} onChange={(e) => setMessageContent(e.target.value)} />
-                <IconButton>
-                  <AttachFile />
-                </IconButton>
-                <IconButton>
-                  <InsertEmoticon />
-                </IconButton>
-                <IconButton onClick={sendMessage}>
-                  <Send />
-                </IconButton>
-              </Box>
-            </div>
-          ) : (
-            <RandConnect
-              setRandomConnect={setRandomConnect}
-              selectedGender={selectedGender}
-              setSelectedGender={setSelectedGender}
-            />
-          )}
-
-        </Grid>
-      </Box>
-    </Box>
+    <div className={styles.home}>
+      <NavBar/>
+      <div className={`${styles.chat}`}>
+        <div className={`${styles['chat-list']}`}>
+          Here will be the chat-list
+        </div>
+        <div className={`${styles['chat-area']}`}>
+          <ChatBox/>
+        </div>
+      </div>
+    </div>
   );
 }
