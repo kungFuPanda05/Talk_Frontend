@@ -25,6 +25,7 @@ import NormalChat from "@/components/NormalChat";
 import NavBar from "@/components/NavBar";
 import styles from '../styles/chat.module.scss'
 import ChatBox from "@/components/ChatBox";
+import ChatList from "@/components/ChatList";
 
 
 export default function Home() {
@@ -118,7 +119,7 @@ export default function Home() {
       <NavBar/>
       <div className={`${styles.chat}`}>
         <div className={`${styles['chat-list']}`}>
-          Here will be the chat-list
+          <ChatList/>
         </div>
         <div className={`${styles['chat-area']}`}>
           <ChatBox/>

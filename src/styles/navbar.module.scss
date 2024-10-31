@@ -5,6 +5,8 @@ $primary-color: #007bff;
     height: var(--navbar-height);
     display: flex;
     align-items: center;
+    box-shadow: 0px 1px 3px 1px grey;
+    z-index: 20;
 }
 .innernavbar{
     height: 60%;

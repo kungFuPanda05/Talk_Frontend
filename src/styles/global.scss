@@ -7,7 +7,8 @@ $primary-color: #007bff;
   --navbar-height: 60px;
   --send-message-height: 80px;
   --chatbox-padding: 20px;
-  --chatlist-width: 33%
+  --chatlist-width: 33%;
+  --primary-padding: 20px;
 }
 
 
@@ -122,6 +123,7 @@ input{
   /* For Firefox */
   scrollbar-width:none;
   scrollbar-color: #888 #f1f1f1; /* Thumb color, track color */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling for WebKit browsers */
 }
 
 .auto-scroll{
@@ -141,6 +143,16 @@ input{
   flex-direction: column;
   justify-content: flex-end;
   // border: 2px dotted blue;
+}
+.MuiBadge-badge{
+  // font-size: 0.7rem;
+  // min-width: 18px;
+  // height: 18px;
+  // padding: 0;
+  // padding: 0px;
+  // top: 4px;
+  // right: 5px;
+  // border: 0.1px solid white;
 }
 
 // .navbar{

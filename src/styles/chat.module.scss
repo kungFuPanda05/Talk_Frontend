@@ -10,12 +10,12 @@ $primary-color: #007bff;
     flex: 1;
 }
 .chat-list{
-    width: var(--chatlist-width);
+    width: calc(var(--chatlist-width));
     height: calc(100vh - var(--navbar-height));
 }
 .chat-area{
-    // flex: 1;
+    flex: 1;
     height: calc(100vh - var(--navbar-height));
-    width: calc(100vw - var(--chatlist-width));
-    border: 2px solid red;
+    // width: calc(100vw - var(--chatlist-width));
+    // border: 2px solid red;
 }

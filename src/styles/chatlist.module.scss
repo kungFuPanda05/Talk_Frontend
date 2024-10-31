@@ -1,0 +1,60 @@
+.container {
+    border-right: 1px solid rgb(204, 204, 205);
+    overflow-y: auto;
+    height: 100%;
+
+    /* For Firefox */
+    scrollbar-width: none; /* Makes the scrollbar thin */
+    scrollbar-color: #888 #f1f1f1; /* Color of thumb and track */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling for WebKit browsers */
+}
+
+/* For WebKit browsers (Chrome, Safari) */
+.container::-webkit-scrollbar {
+    width: 1px; /* Adjust the width to make it narrower */
+}
+
+.container::-webkit-scrollbar-track {
+    background: #f1f1f1; /* Track color */
+}
+
+.container::-webkit-scrollbar-thumb {
+    background: #888; /* Thumb (scroll handle) color */
+    border-radius: 2px; /* Rounds the scrollbar handle */
+}
+
+.container::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Color on hover */
+}
+
+.chat-name{
+    font-size: 0.85rem;
+    margin-left: 5px;
+    font-weight: bold;
+}
+.chat-message{
+    margin-left: 5px;
+    font-size: 0.7rem;
+}
+.chat-list-item{
+    margin-top: 10px;
+}
+.chat-list-header{
+    // border: 2px solid red;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 10;
+    padding-bottom: 20px;
+}
+.search{
+    padding-left: 20px;
+    width: calc(100% - 2*var(--primary-padding));
+    margin: auto;
+    display: flex;
+    justify-content: space-between;
+    background-color: rgb(240,242,245);
+    .search-bar{
+        flex: 1;
+    }
+}
