@@ -4,26 +4,14 @@ import {
     InputBase,
     IconButton,
     Typography,
+    TextareaAutosize,
 } from "@mui/material";
 import { AttachFile, InsertEmoticon, Send } from "@mui/icons-material";
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useState } from "react";
 import styles from '../styles/chatbox.module.scss'
 
-const ChatBox = () => {
-    const [selfId, setSelfId] = useState(1);
-    const [messages, setMessages] = useState([
-        { content: "First message", userId: 1 },
-        { content: "Second message", userId: 2 },
-        { content: "Third message", userId: 1 },
-        { content: "Fourth message", userId: 1 },
-        { content: "Fifth message", userId: 2 },
-        { content: "Sixth message", userId: 1 },
-        { content: "Seventh message", userId: 2 },
-        { content: "Eighth message", userId: 2 },
-        { content: "Nineth message", userId: 1 },
-        { content: "Tenth, kyu be bhadwe kaha gand mara rha hai be chutiye gendu message", userId: 2 },
-    ]);
+const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMessage }) => {
     const [hasMore, setHasMore] = useState(false);
 
     const fetchMoreMessages = () => {
@@ -62,15 +50,31 @@ const ChatBox = () => {
             <Box
 
                 className={`${styles['send-message']}`}>
-                <Avatar src="/img1.png" />
-                <InputBase style={{ flex: 1, marginLeft: '9px', backgroundColor: 'F1F1F1' }} className="" placeholder="Type message" />
+                <Avatar />
+                <TextareaAutosize
+                    minRows={1} // Minimum number of rows (lines)
+                    maxRows={4} // Optional: Maximum number of rows before scrolling
+                    style={{
+                        flex: 1,
+                        marginLeft: '9px',
+                        backgroundColor: '#F0F2F5',
+                        padding: '10px',
+                        height: '20px',
+                        borderRadius: '5px',
+                        width: '100%',
+                        border: 'none'
+                    }}
+                    placeholder="Type message"
+                    value={messageContent}
+                    onChange={(e) => setMessageContent(e.target.value)}
+                />
                 <IconButton>
                     <AttachFile />
                 </IconButton>
                 <IconButton>
                     <InsertEmoticon />
                 </IconButton>
-                <IconButton>
+                <IconButton onClick={sendMessage}>
                     <Send />
                 </IconButton>
             </Box>

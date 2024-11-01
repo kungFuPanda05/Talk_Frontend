@@ -11,6 +11,7 @@ $primary-color: #007bff;
 }
 .chat-list{
     width: calc(var(--chatlist-width));
+    min-width: 325px;
     height: calc(100vh - var(--navbar-height));
 }
 .chat-area{

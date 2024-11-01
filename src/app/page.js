@@ -26,6 +26,7 @@ import NavBar from "@/components/NavBar";
 import styles from '../styles/chat.module.scss'
 import ChatBox from "@/components/ChatBox";
 import ChatList from "@/components/ChatList";
+import SelectGender from "@/components/SelectGender";
 
 
 export default function Home() {
@@ -119,10 +120,21 @@ export default function Home() {
       <NavBar/>
       <div className={`${styles.chat}`}>
         <div className={`${styles['chat-list']}`}>
-          <ChatList/>
+          <ChatList chats={chats} handleChatSelect={handleChatSelect}/>
         </div>
         <div className={`${styles['chat-area']}`}>
-          <ChatBox/>
+          {selectedChat ? (
+            <NormalChat selectedChat={selectedChat} selfId={selfId} normalMessageList={normalMessageList} setNormalMessageList={setNormalMessageList} />
+          ) : randomConnect ? (
+            <ChatBox selfId={selfId} messages={randomMessageList} messageContent={messageContent} setMessageContent={setMessageContent} sendMessage={sendMessage}/>
+          ) : (
+            <SelectGender
+              setRandomConnect={setRandomConnect}
+              selectedGender={selectedGender}
+              setSelectedGender={setSelectedGender}
+            />
+          )}
+
         </div>
       </div>
     </div>

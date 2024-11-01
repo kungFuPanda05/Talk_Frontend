@@ -21,6 +21,7 @@ import Cookies from "js-cookie";
 import io from 'socket.io-client'
 import api from "@/utils/api";
 import apiError from "@/utils/apiError";
+import ChatBox from "./ChatBox";
 
 export default function NormalChat({selectedChat, selfId, normalMessageList, setNormalMessageList}) {
     const roomId = selectedChat;
@@ -85,35 +86,9 @@ export default function NormalChat({selectedChat, selfId, normalMessageList, set
   }
 
   return (
-    <div style={{height: '100%'}}>
-        <Box className="chatMessages">
-          {normalMessageList?.map((message)=>(
-            <Box className={`messageRow ${selfId==message.userId?"messageRowEnd":""}`}>
-              {selfId!=message.userId && <Avatar src="/img1.png" className="avatar" />} 
-              <Box>
-                <Typography className={selfId==message.userId? "messageBubbleSent":"messageBubble"}>
-                  {message.content}
-                </Typography>
-                <Typography variant="caption" className="messageTime">
-                  12:00 PM | Aug 13
-                </Typography>
-              </Box>
-            </Box>
-          ))}
-        </Box>
-        <Box className="chatInputWrapper">
-          <Avatar src="/img1.png" />
-          <InputBase className="chatInput" placeholder="Type message" value={messageContent} onChange={(e)=>setMessageContent(e.target.value)}/>
-          <IconButton>
-            <AttachFile />
-          </IconButton>
-          <IconButton>
-            <InsertEmoticon />
-          </IconButton>
-          <IconButton onClick={sendMessage}>
-            <Send />
-          </IconButton>
-        </Box>
-    </div>
+    <>
+      <ChatBox selfId={selfId} messages={normalMessageList} messageContent={messageContent} setMessageContent={setMessageContent} sendMessage={sendMessage}/>
+    </>
+    
   );
 }
