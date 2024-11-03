@@ -13,10 +13,16 @@ import { Check, Male, Female, Shuffle } from "@mui/icons-material";
 
 import styles from '../styles/selectGender.module.scss'
 
-const SelectGender = ({ setRandomConnect, selectedGender, setSelectedGender }) => {
+const SelectGender = ({ setConnecting, selectedGender, setSelectedGender, setDont }) => {
+    const [checked, setChecked] = useState(false);
+
     const handleGenderSelect = (gender) => {
         setSelectedGender(gender);
     };
+    const handleConnecting = () => {
+        setConnecting(true);
+        if(checked) setDont(true);
+    }
     return (
         <div className={styles.container}>
             <div className={styles.header}>
@@ -59,13 +65,13 @@ const SelectGender = ({ setRandomConnect, selectedGender, setSelectedGender }) =
             </div>
             <div className={styles['do-not']}>
                 <FormControlLabel
-                    control={<Checkbox />}
+                    control={<Checkbox checked={checked} onChange={(e)=>setChecked(e.target.checked)} />}
                     label="Do not ask again"
                 />
             </div>
             <div className={styles.buttons}>
                 <Button variant="contained" color="primary">Buy Voucher</Button>
-                <Button onClick={() => setRandomConnect(true)} variant="contained" color="secondary">Start</Button>
+                <Button onClick={handleConnecting} variant="contained" color="secondary">Start</Button>
             </div>
         </div>
     )

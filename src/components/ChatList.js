@@ -17,7 +17,7 @@ import { Search } from "@mui/icons-material";
 import styles from '../styles/chatlist.module.scss'
 
 
-const ChatList = ({chats, handleChatSelect}) => {
+const ChatList = ({chats, handleChatSelect, selectedChat}) => {
     return (
         <div className={`${styles.container}`}>
             <div className={styles['chat-list-header']}>
@@ -38,7 +38,7 @@ const ChatList = ({chats, handleChatSelect}) => {
             {/* Chat List */}
             <List>
                 {chats?.map((chat, index) => (
-                    <ListItem key={index} className={styles['chat-list-item']} onClick={() => handleChatSelect(chat.id)}>
+                    <ListItem key={index} className={`${styles['chat-list-item']} ${(chat.id==selectedChat && !chat.gender)? styles['chat-select']: ""} ${(chat.gender)? `${chat.gender}-bg`:""}`} onClick={() => handleChatSelect(chat.id)}>
                         <ListItemAvatar>
                             <Badge
                                 badgeContent={chat.newMessageCount > 0 ? chat.newMessageCount : null}
@@ -61,7 +61,7 @@ const ChatList = ({chats, handleChatSelect}) => {
                         </ListItemAvatar>
                         <ListItemText
                             primary={chat.chatName}
-                            secondary={chat.Last_Message?.content}
+                            secondary={chat.Last_Message?.content ?? "No messages yet..."}
                             primaryTypographyProps={{ className: styles['chat-name'] }}
                             secondaryTypographyProps={{ className: styles['chat-message'] }}
                         />

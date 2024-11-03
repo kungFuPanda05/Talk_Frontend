@@ -38,6 +38,13 @@
 }
 .chat-list-item{
     margin-top: 10px;
+    cursor: pointer;
+}
+.chat-select{
+    background-color: #F0F2F5;
+}
+.chat-list-item:hover{
+    background-color: #F0F2F5;
 }
 .chat-list-header{
     // border: 2px solid red;
@@ -45,7 +52,20 @@
     top: 0;
     background-color: white;
     z-index: 10;
-    padding-bottom: 20px;
+    padding-top: 5px;
+    padding-bottom: 30px;
+    box-shadow: 0px 0px 3px rgb(171, 170, 170);
+    // background-color: rgb(237, 239, 239);
+    // background-color: whitesmoke;
+    // background-color: rgb(220, 233, 233);
+    // background-color: rgb(243, 248, 249);
+    background: linear-gradient(
+        to top,
+        // rgb(249, 249, 249),
+        rgb(242, 246, 246),
+        // rgb(198, 241, 247),
+        rgb(198, 234, 247),
+    );
 }
 .search{
     padding-left: 20px;

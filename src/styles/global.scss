@@ -144,17 +144,29 @@ input{
   justify-content: flex-end;
   // border: 2px dotted blue;
 }
-.MuiBadge-badge{
-  // font-size: 0.7rem;
-  // min-width: 18px;
-  // height: 18px;
-  // padding: 0;
-  // padding: 0px;
-  // top: 4px;
-  // right: 5px;
-  // border: 0.1px solid white;
-}
-
-// .navbar{
-//   border: 2px solid black;
+// .MuiBadge-badge{
+//   // font-size: 0.7rem;
+//   // min-width: 18px;
+//   // height: 18px;
+//   // padding: 0;
+//   // padding: 0px;
+//   // top: 4px;
+//   // right: 5px;
+//   // border: 0.1px solid white;
 // }
+
+.M-bg{
+  background-color: rgb(201, 232, 250);
+}
+.F-bg{
+  background-color: rgb(244, 227, 246);
+}
+.R-bg{
+  background-color: rgb(217, 241, 217);
+}
+.disable{
+  cursor: not-allowed;
+  border: none;
+  box-shadow: none;
+  background-color: rgb(203, 202, 202);
+}
