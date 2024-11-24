@@ -2,11 +2,13 @@
     border-right: 1px solid rgb(204, 204, 205);
     overflow-y: auto;
     height: 100%;
+    position: relative;
 
     /* For Firefox */
     scrollbar-width: none; /* Makes the scrollbar thin */
     scrollbar-color: #888 #f1f1f1; /* Color of thumb and track */
     -webkit-overflow-scrolling: touch; /* Smooth scrolling for WebKit browsers */
+    // border: 2px solid black;
 }
 
 /* For WebKit browsers (Chrome, Safari) */
@@ -77,4 +79,25 @@
     .search-bar{
         flex: 1;
     }
+}
+
+.fixed-button-container {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 20; /* Ensures it stays above other content */
+}
+
+.fixed-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.fixed-button:hover {
+    background-color: #0056b3;
 }

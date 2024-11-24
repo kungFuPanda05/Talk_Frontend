@@ -22,7 +22,6 @@ import Cookies from "js-cookie";
 import io from 'socket.io-client'
 import api from "@/utils/api";
 import apiError from "@/utils/apiError";
-import NormalChat from "@/components/NormalChat";
 import NavBar from "@/components/NavBar";
 import styles from '../styles/chat.module.scss'
 import ChatBox from "@/components/ChatBox";
@@ -65,17 +64,24 @@ export default function Home() {
       apiError(error);
     }
   }
-  const fetchChats = async () => {
+  const fetchChats = async (search="", limit=10, page=1) => {
     try {
-      let response = await api.get('/api/chat/chat-list');
-      setChats(response.data.result);
+      let response = await api.get('/api/chat/chat-list', {
+        params: {
+          limit, search, page
+        }
+      });
+      let strangerChat = chats.find((chat) => chat.chatName === "Stranger");
+      if (strangerChat) {
+        let finalChatList = [strangerChat, ...response.data.result];
+        setChats(finalChatList);
+      } else setChats(response.data.result);
     } catch (error) {
       apiError(error);
     }
   }
   useEffect(() => {
     fetchUserId();
-    fetchChats();
   }, []);
 
   useEffect(() => {
@@ -89,21 +95,21 @@ export default function Home() {
 
       socketRef.current.on('message', (message) => {
         console.log("The message received is: ", message);
-        if (message.randomRoomId) {
-          delete message.randomRoomId;
-          setRandomMessageList((prevState) => [...prevState, message]);
-        } else if (message.chatId) {
-          console.log("The selectedChat after receiveing: ", selectedChatRef.current);
-          if (message.chatId == selectedChatRef.current) {
-            delete message.chatId;
-            setNormalMessageList((prevState) => [...prevState, message]);
+
+        console.log("The message.chatId: ", message.chatId, " selectedChatRef.current: ", selectedChatRef.current);
+        if (message.chatId == 0) setRandomMessageList((prevState) => [message, ...prevState]);
+        if (message.chatId == selectedChatRef.current) {
+          if (message.chatId == 0) {
+            handleMessageNotifications(message, false);
           } else {
-            //send notifications to those chats
-            handleNormalMessageNotifications(message);
-            console.log("printing the selfId and message.userId: ", selfId, message.userId);
-            if (parseInt(selfIdRef.current, 10) !== parseInt(message.userId, 10)) { //meaning the message is received message
-              updateNewMessageCount(message.chatId, selfIdRef.current);
-            }
+            setNormalMessageList((prevState) => [message, ...prevState]);
+          }
+        } else {
+          //send notifications to those chats
+          handleMessageNotifications(message);
+          console.log("printing the selfId and message.userId: ", selfId, message.userId);
+          if (parseInt(selfIdRef.current, 10) !== parseInt(message.userId, 10)) { //meaning the message is received message
+            updateNewMessageCount(message.chatId, selfIdRef.current);
           }
         }
       });
@@ -114,7 +120,6 @@ export default function Home() {
       });
 
       socketRef.current.on('strangers-connected', (response) => {
-
         if (response.success) {
           setRandomConnect(true);
           setConnecting(false);
@@ -123,14 +128,15 @@ export default function Home() {
         }
       });
 
-      socketRef.current.on('receive-request', (res)=>{
+      socketRef.current.on('receive-request', (res) => {
         setReqReceived(true);
       });
 
-      socketRef.current.on('receive-request-accept', (res)=>{
-        setIsAccept(true);
+      socketRef.current.on('receive-request-accept', (res) => {
+        // setIsAccept(true);
+        toast.info("Stranger has accepted the friend request");
       })
-      
+
 
       socketRef.current.on('error', (error) => {
         toast.error(error.message);
@@ -147,9 +153,9 @@ export default function Home() {
       }
     };
   }, []);
-  useEffect(()=>{
-    console.log("The strangerID is: ", strangerId);
-  }, [strangerId]);
+  useEffect(() => {
+    if (strangerId && selfId) fetchFriendRequestDetails();
+  }, [strangerId, selfId]);
 
   useEffect(() => {
     console.log("Random connect use effect triggered: ", randomConnect);
@@ -158,7 +164,21 @@ export default function Home() {
       socketRef.current.emit('leave-room');
     } else {
       console.log("random connect trigger  hu gya");
-      setChats([{ chatName: "Stranger", gender: selectedGender }, ...chats]);
+
+      setChats([{
+        id: 0,
+        chatName: "Stranger",
+        isGroupChat: false,
+        avatar: null,
+        Last_Message: {
+          content: "No Messages yet",
+          sentBy: null,
+          createdAt: new Date()
+        },
+        newMessageCount: 0,
+        gender: selectedGender
+      }, ...chats]);
+      setSelectedChat(0);
       setStrangerLeftChat(false);
     }
   }, [randomConnect]);
@@ -176,7 +196,11 @@ export default function Home() {
 
   useEffect(() => {
     selectedChatRef.current = selectedChat;
-    setMessageContent("");
+    if (selectedChat) {
+      setMessageContent("");
+      setConnecting(false);
+
+    }
   }, [selectedChat]);
 
   useEffect(() => {
@@ -194,18 +218,21 @@ export default function Home() {
     }
   }, [isStrangerLeftChat]);
 
-  useEffect(()=>{
-    if(selfId && randomUserIds){
-      if(randomUserIds[0]==selfId) setStrangerId(randomUserIds[1]);
+  useEffect(() => {
+    if (selfId && randomUserIds) {
+      if (randomUserIds[0] == selfId) setStrangerId(randomUserIds[1]);
       else setStrangerId(randomUserIds[0]);
     }
   }, [randomUserIds, selfId]);
 
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!messageContent) return;
-    socketRef.current.emit("message", { messageContent, chatId: selectedChat });
-    if (selectedChat) createMessage(messageContent);
+    socketRef.current.emit("message", { messageContent, chatId: (selectedChat || 0) });
+    if (selectedChat) {
+      await createMessage(messageContent);
+      fetchChats();
+    }
     setMessageContent("");
   };
 
@@ -217,19 +244,11 @@ export default function Home() {
       apiError(error);
     }
   }
-  const fetchMessages = async (chatId) => {
-    try {
-      const response = await api.get(`/api/message/fetch-messages/${chatId}`);
-      console.log("The message lis: ", response.data.result);
-      setNormalMessageList(response.data.result);
-    } catch (error) {
-      apiError(error);
-    }
-  }
-
+  
 
   const handleChatSelect = (chatId) => {
-    if (chatId >= 1) fetchMessages(chatId);
+    // if (chatId >= 1) fetchMessages(chatId);
+    console.log("call reaching to handle chat select");
     setSelectedChat(chatId);
     setChats((prevState) => {
       return prevState.map((chat) =>
@@ -238,11 +257,12 @@ export default function Home() {
     });
   }
 
-  const handleNormalMessageNotifications = (message) => {
+  const handleMessageNotifications = (message, increaseMessageCount = true) => {
     setChats((prevList) => {
       // Find the matching chat
       const matchingChat = prevList.find((chat) => chat.id === message.chatId);
-
+      const strangerChat = prevList.find((chat) => chat.chatName === "Stranger");
+      console.log("MAtchingchat: ", matchingChat, " strangerChat: ", strangerChat);
       if (!matchingChat) return prevList;
 
       // Update the matching chat
@@ -253,9 +273,9 @@ export default function Home() {
           content: message.content,
           sentBy: message.userId, // Updating sentBy as well
         },
-        newMessageCount: matchingChat.newMessageCount + 1,
+        newMessageCount: matchingChat.newMessageCount + (increaseMessageCount ? 1 : 0),
       };
-
+      if (strangerChat && message.chatId != 0) return [strangerChat, updatedChat, ...prevList.filter((chat) => (chat.id !== message.chatId && chat.chatName !== "Stranger"))]
       return [updatedChat, ...prevList.filter((chat) => chat.id !== message.chatId)];
     });
   };
@@ -265,7 +285,7 @@ export default function Home() {
   }
 
   const updateNewMessageCount = async (chatId, userId) => {
-    console.log("Update message count ke andar ki cheezein: ", chatId, userId);
+    if (chatId == 0) return;
     try {
       const response = await api.post(`/api/message/update-new-messages-count`, { chatId, userId });
       console.log("Reposne: ", response);
@@ -275,9 +295,9 @@ export default function Home() {
     }
   }
 
-  const sendFriendRequest = async() => {
+  const sendFriendRequest = async () => {
     try {
-      let response = await api.post('/api/friend/send-friend-req', { selfId, strangerId});
+      let response = await api.post('/api/friend/send-friend-req', { selfId, strangerId });
       socketRef.current.emit('send-request');
       toast.success(response.data.messages);
     } catch (error) {
@@ -286,15 +306,32 @@ export default function Home() {
     setReqSent(true);
   }
 
-  const handleReqStatus = (status) => {
-    if(status==="reject"){
-      //write the request rejection logic
-      setIsReject(true);
-    }else if(status==='accept'){
-      //write request accept logic 
+  const handleReqStatus = async (status) => {
+    try {
+      let response = await api.post('/api/friend/set-status', { status, strangerId });
+      toast.success(response.data.messages);
+      if (status === "reject") {
+        setIsReject(true);
+      } else if (status === 'accept') {
+        socketRef.current.emit('send-request-accept');
+        setIsAccept(true);
+        fetchChats();
+      }
+    } catch (error) {
+      apiError(error);
+    }
 
-      socketRef.current.emit('send-request-accept');
-      setIsAccept(true);
+  }
+
+  const fetchFriendRequestDetails = async () => {
+    try {
+      let response = await api.post('/api/friend/fetch-friend-status', { selfId, strangerId });
+      setReqSent(response.data.response.isReqSent);
+      setIsReject(response.data.response.isReject);
+      setIsAccept(response.data.response.isAccept);
+      setReqReceived(response.data.response.isReqRecieved);
+    } catch (error) {
+      apiError(error);
     }
   }
 
@@ -303,7 +340,7 @@ export default function Home() {
       <NavBar />
       <div className={`${styles.chat}`}>
         <div className={`${styles['chat-list']}`}>
-          <ChatList chats={chats} handleChatSelect={handleChatSelect} selectedChat={selectedChat} />
+          <ChatList chats={chats} handleChatSelect={handleChatSelect} selectedChat={selectedChat} randomConnect={randomConnect} setConnecting={setConnecting} setSelectedChat={setSelectedChat} dont={dont} fetchChats={fetchChats} />
         </div>
         <div className={`${styles['chat-area']}`}>
           {connecting ? (
@@ -340,6 +377,7 @@ export default function Home() {
               isReject={isReject}
               sendFriendRequest={sendFriendRequest}
               handleReqStatus={handleReqStatus}
+              setNormalMessageList={setNormalMessageList}
             />
           ) : (
             <SelectGender

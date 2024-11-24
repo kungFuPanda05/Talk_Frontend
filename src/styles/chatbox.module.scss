@@ -43,6 +43,9 @@ $primary-color: #007bff;
     border-radius: 15px;
     border-top-left-radius: 0;
     max-width: 50%;
+    word-wrap: break-word; /* Legacy property */
+    overflow-wrap: break-word; /* Modern equivalent */
+    overflow: hidden; /* Prevent content from overflowing */
 }
 .message-sent{
     align-self: flex-end;

@@ -71,8 +71,8 @@ const Register = ()=>{
                         <div className="regInsideDivs">
                             <select value={gender} onChange={(e)=> setGender(e.target.value)} required>
                                 <option value={""}>select</option>
-                                <option value={false}>Male</option>
-                                <option value={true}>Female</option>
+                                <option value={'M'}>Male</option>
+                                <option value={'F'}>Female</option>
                             </select>
                         </div>
                     </div>
