@@ -15,7 +15,13 @@ import {
     Button,
     Box,
     Menu,
-    MenuItem
+    MenuItem,
+    Modal,
+    TextField,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
 } from "@mui/material";
 import { Search } from "@mui/icons-material";
 import styles from '../styles/chatlist.module.scss'
@@ -25,13 +31,18 @@ import { toast } from "react-toastify";
 import apiError from "@/utils/apiError";
 import api from "@/utils/api";
 
-
 const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setConnecting, setSelectedChat, dont, fetchChats, handleReqStatus }) => {
     let [limit, setLimit] = useState(10);
     let [page, setPage] = useState(1);
     let [search, setSearch] = useState("");
     const [anchorEl, setAnchorEl] = useState(null);
+    const [anchorElChats, setAnchorElChats] = useState(null);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [reportDescription, setReportDescription] = useState("");
+    const [friendId, setFriendId] = useState("");
+
     const isOpen = Boolean(anchorEl);
+
 
     const handleMenuOpen = (event) => {
         event.stopPropagation();
@@ -43,39 +54,63 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
         setAnchorEl(null);
     };
 
-    const deleteChat = async(chatId) => {
+    const handleChatsMenuOpen = (event) => {
+        event.stopPropagation();
+        setAnchorElChats(event.currentTarget);
+    };
+
+    const handleChatsMenuClose = (event) => {
+        event.stopPropagation();
+        setAnchorElChats(null);
+    };
+
+    const deleteChat = async (chatId) => {
         console.log("reaching to delete chat: ", chatId);
-        try{
+        try {
             let response = await api.post(`/api/chat/delete-chat/${chatId}`);
             console.log("The response is : ", response)
             toast.success(response.data.message, {
                 position: 'top-center',
                 hideProgressBar: false
             });
-
-        }catch(error){
+        } catch (error) {
             apiError(error);
         }
-    }
-
-    const handleAction = async(action, e, chatId, friendId) => {
-        handleMenuClose(e);
-        if(action==="delete"){
-            await deleteChat(chatId);
-            fetchChats(search, limit, page);
-        }else if(action==="block"){
-            handleReqStatus("block", friendId);
-        }
-        // Add your action logic here (e.g., API call for report, block, or delete)
     };
 
+    const handleReport = async () => {
+        try {
+            let response = await api.post(`/api/report/report-user`, { to: friendId, description: reportDescription });
+            toast.success(response.data.message, {
+                position: 'top-center',
+                hideProgressBar: false
+            });
+            setReportDescription(""); // Clear the description
+            setIsReportModalOpen(false); // Close the modal
+        } catch (error) {
+            apiError(error);
+        }
+    };
+
+    const handleAction = async (action, e, chatId, friendId) => {
+        handleMenuClose(e);
+        console.log("Receving the friend id in fhandleaction: ", friendId);
+        setFriendId(friendId);
+        if (action === "delete") {
+            await deleteChat(chatId);
+            fetchChats(search, limit, page);
+        } else if (action === "block") {
+            handleReqStatus("block", friendId);
+        } else if (action === "report") {
+            setIsReportModalOpen(true); // Open the report modal
+        }
+    };
 
     const formatDate = (date) => {
         if (!date) return "N/A"
         const inputDate = new Date(date); // Convert input to a Date object
         const today = new Date(); // Get today's date
 
-        // Helper function to format time in AM/PM
         const formatTime = (date) => {
             const hours = date.getHours();
             const minutes = date.getMinutes();
@@ -85,7 +120,6 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
             return `${formattedHours}:${formattedMinutes} ${ampm}`;
         };
 
-        // Check if the input date is today
         if (
             inputDate.getFullYear() === today.getFullYear() &&
             inputDate.getMonth() === today.getMonth() &&
@@ -94,7 +128,6 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
             return formatTime(inputDate); // Return time in AM/PM format
         }
 
-        // Check if the input date is yesterday
         const yesterday = new Date(today);
         yesterday.setDate(today.getDate() - 1);
         if (
@@ -102,29 +135,62 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
             inputDate.getMonth() === yesterday.getMonth() &&
             inputDate.getDate() === yesterday.getDate()
         ) {
-            return 'Yesterday'; // Return "Yesterday"
+            return 'Yesterday';
         }
 
-        // Otherwise, return date in dd/mm/yyyy format
         const day = inputDate.getDate().toString().padStart(2, '0');
         const month = (inputDate.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-indexed
         const year = inputDate.getFullYear();
         return `${day}/${month}/${year}`;
     };
 
+    const handleBlockedUsersDrawer = (e) => {
+        handleChatsMenuClose(e);
+    }
+    const handleRejectedReqDrawer = (e) => {
+        handleChatsMenuClose(e);
+    }
 
     useEffect(() => {
         fetchChats(search, limit, page)
     }, [search, page, limit]);
 
-    useEffect(()=>{
-        console.log("The selectedChat is: ", selectedChat);
-    }, [selectedChat])
 
     return (
         <div className={`${styles.container}`}>
             <div className={styles['chat-list-header']}>
-                <div style={{ fontSize: '25px', fontWeight: 'bold', padding: '10px', paddingLeft: '20px' }}>Chats</div>
+                <div style={{ display: "flex", justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '25px', fontWeight: 'bold', padding: '10px', paddingLeft: '20px' }}>Chats</div>
+                    <IconButton
+                        size="large"
+                        aria-label="show more"
+                        aria-controls={isOpen ? "chat-options-menu" : undefined}
+                        aria-haspopup="true"
+                        onClick={handleChatsMenuOpen}
+                        sx={{
+                            height: '100%',
+                        }}
+                    >
+                        <MoreIcon style={{ fontSize: "1rem" }} />
+                    </IconButton>
+                    <Menu
+                        id="chat-options-menu"
+                        anchorEl={anchorElChats}
+                        open={anchorElChats?true:false}
+                        onClose={handleChatsMenuClose}
+                        anchorOrigin={{
+                            vertical: "top",
+                            horizontal: "right",
+                        }}
+                        transformOrigin={{
+                            vertical: "top",
+                            horizontal: "right",
+                        }}
+                    >
+                        <MenuItem style={{ fontSize: '0.7rem' }} onClick={handleBlockedUsersDrawer}>Blocked Users</MenuItem>
+                        <MenuItem style={{ fontSize: '0.7rem' }} onClick={handleRejectedReqDrawer}>Rejected Requests</MenuItem>
+                    </Menu>
+                </div>
                 <Paper component="form" className={styles.search}>
                     <InputBase
                         className={styles['search-bar']}
@@ -137,7 +203,6 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                         <Search />
                     </IconButton>
                 </Paper>
-
             </div>
 
             {/* Chat List */}
@@ -156,10 +221,9 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                                         padding: 0,
                                         top: '4px',
                                         right: '5px',
-                                        border: '0.1px solid white',  // Adjust padding if needed
+                                        border: '0.1px solid white',
                                     },
                                 }}
-
                             >
                                 <Avatar alt={chat.chatName} src={chat.avatar} />
                             </Badge>
@@ -202,11 +266,10 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                                     vertical: "top",
                                     horizontal: "right",
                                 }}
-                                
                             >
-                                <MenuItem style={{fontSize: '0.7rem'}} onClick={(e) => handleAction("report", e, chat.id)}>Report</MenuItem>
-                                <MenuItem style={{fontSize: '0.7rem'}} onClick={(e) => handleAction("block", e, chat.id, chat.friendId)}>Block</MenuItem>
-                                <MenuItem style={{fontSize: '0.7rem'}} onClick={(e) => handleAction("delete", e, chat.id)}>Delete</MenuItem>
+                                <MenuItem style={{ fontSize: '0.7rem' }} onClick={(e) => handleAction("report", e, chat.id, chat.friendId)}>Report</MenuItem>
+                                <MenuItem style={{ fontSize: '0.7rem' }} onClick={(e) => handleAction("block", e, chat.id, chat.friendId)}>Block</MenuItem>
+                                <MenuItem style={{ fontSize: '0.7rem' }} onClick={(e) => handleAction("delete", e, chat.id, chat.friendId)}>Delete</MenuItem>
                             </Menu>
 
                             {/* Timestamp */}
@@ -234,7 +297,31 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                     if (dont) setConnecting(true);
                 }}>Connect Stranger</Button> : ""
             }
-        </div >
+
+            {/* Report Modal */}
+            <Dialog open={isReportModalOpen} onClose={() => setIsReportModalOpen(false)}>
+                <DialogTitle>Report</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Description"
+                        type="text"
+                        fullWidth
+                        multiline
+                        rows={4}
+                        inputProps={{ maxLength: 100 }}
+                        value={reportDescription}
+                        onChange={(e) => setReportDescription(e.target.value)}
+                        helperText={`${reportDescription.length}/100`}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setIsReportModalOpen(false)}>Cancel</Button>
+                    <Button onClick={handleReport} color="primary" variant="contained">Submit</Button>
+                </DialogActions>
+            </Dialog>
+        </div>
     )
 }
 export default ChatList;
