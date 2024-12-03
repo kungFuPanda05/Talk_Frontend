@@ -22,6 +22,7 @@ import api from '@/utils/api';
 import apiError from '@/utils/apiError';
 import { toast } from 'react-toastify';
 import NoDataFound from './NoDataFound';
+import SideDrawer from './SideDrawer';
 
 const NavBar = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -107,130 +108,72 @@ const NavBar = () => {
       </div>
 
       {/* Drawer Component */}
-      <Drawer anchor="right" open={isDrawerOpen} onClose={toggleDrawer(false)}>
-        <Box
-          sx={{
-            width: 450, // Reduced width
-            padding: 2,
-            paddingTop: 1,
-            paddingBottom: 1,
-            position: 'relative',
-            borderLeft: '1px solid #ddd', // Subtle border on left side
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            // justifyContent: 'space-between'
-          }}
-          role="presentation"
-          onKeyDown={toggleDrawer(false)}
-        >
-          {/* Close Button at Top Right */}
-          <IconButton
-            aria-label="close"
-            onClick={toggleDrawer(false)}
-            sx={{ position: 'absolute', top: 8, right: 8 }}
-          >
-            ✖
-          </IconButton>
+      <SideDrawer heading={"Friend Requests"} secondaryHeading={"List of the friend requests"} alignment={"right"} isDrawerOpen={isDrawerOpen} setIsDrawerOpen={setIsDrawerOpen}>
+        {friendReq.length > 0 ? (
+          <List sx={{ marginTop: 1, flexGrow: 1 }}>
+            {friendReq.map((request) => (
+              <ListItem
+                key={request.id}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: 1,
+                  borderRadius: 3,
+                  backgroundColor: '#f5f5f5',
+                }}
+              >
+                {/* Avatar with reduced spacing */}
+                <Avatar src={request.avatar} alt={request.SentRequests.name} sx={{ marginRight: 1, width: 40, height: 40 }} />
 
-          {/* Header */}
-          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-            Friend Requests
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: '0.85rem', // Smaller font size
-              color: 'gray', // Greyish color
-              fontWeight: 300, // Light font weight
-              marginBottom: 1,
-            }}
-          >
-            List of the friend requests
-          </Typography>
-          <Divider />
+                {/* Friend Name */}
+                <Box sx={{ flex: 1 }}>
+                  <ListItemText
+                    primary={request.SentRequests.name}
+                    primaryTypographyProps={{ sx: { fontWeight: 'bold' } }}
 
-          {/* Body - List of Friend Requests */}
-          {friendReq.length>0?(
-            <List sx={{ marginTop: 1, flexGrow: 1 }}>
-              {friendReq.map((request) => (
-                <ListItem
-                  key={request.id}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: 1,
-                    borderRadius: 3,
-                    backgroundColor: '#f5f5f5' ,
-                  }}
-                >
-                  {/* Avatar with reduced spacing */}
-                  <Avatar src={request.avatar} alt={request.SentRequests.name} sx={{ marginRight: 1, width: 40, height: 40 }} />
+                  />
+                  <Typography
+                    sx={{
+                      fontSize: '0.6rem', // Smaller font size
+                      color: 'gray', // Greyish color
+                      fontWeight: 250, // Light font weight
+                      marginBottom: 1,
+                    }}
+                  >
+                    {request.createdAt?.split('T')[0]}
+                  </Typography>
+                </Box>
 
-                  {/* Friend Name */}
-                  <Box sx={{ flex: 1 }}>
-                    <ListItemText
-                      primary={request.SentRequests.name}
-                      primaryTypographyProps={{ sx: { fontWeight: 'bold' } }}
+                {/* Action Buttons */}
+                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    size="small"
+                    sx={{ minWidth: '50px', fontSize: '0.65rem', padding: '2px 8px' }}
+                    onClick={() => handleReqStatus('accept', request.SentRequests.id)}
+                  >
+                    Accept
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    sx={{ minWidth: '50px', fontSize: '0.65rem', padding: '2px 8px' }}
+                    onClick={() => handleReqStatus('reject', request.SentRequests.id)}
+                  >
+                    Reject
+                  </Button>
+                </Box>
+              </ListItem>
+            ))}
+          </List>
 
-                    />
-                    <Typography
-                      sx={{
-                        fontSize: '0.6rem', // Smaller font size
-                        color: 'gray', // Greyish color
-                        fontWeight: 250, // Light font weight
-                        marginBottom: 1,
-                      }}
-                    >
-                      {request.createdAt.split('T')[0]}
-                    </Typography>
-                  </Box>
+        ) : (
+          <NoDataFound heading={"No friend requests received"} text={"You haven't received any friend requests, connect with strangers and behave accordingly to get friend requests"} />
 
-                  {/* Action Buttons */}
-                  <Box sx={{ display: 'flex', gap: 0.5 }}>
-                    <Button
-                      variant="contained"
-                      color="success"
-                      size="small"
-                      sx={{ minWidth: '50px', fontSize: '0.65rem', padding: '2px 8px' }}
-                      onClick={()=>handleReqStatus('accept', request.SentRequests.id)}
-                    >
-                      Accept
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      sx={{ minWidth: '50px', fontSize: '0.65rem', padding: '2px 8px' }}
-                      onClick={()=>handleReqStatus('reject', request.SentRequests.id)}
-                    >
-                      Reject
-                    </Button>
-                  </Box>
-                </ListItem>
-              ))}
-            </List>
-
-          ):(
-            <NoDataFound heading={"No friend requests received"} text={"You haven't received any friend requests, connect with strangers and behave accordinlgy to get friend requests"}/>
-
-          )}
-
-          {/* Footer */}
-          <Divider sx={{ marginTop: 2 }} />
-          <Box sx={{ textAlign: 'right', margin: '10px', alignSelf: 'flex-end' }}>
-            {/* Close Button at Bottom Right */}
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              onClick={toggleDrawer(false)}
-              sx={{ fontSize: '0.7rem', padding: '4px 12px' }}
-            >
-              Close
-            </Button>
-          </Box>
-        </Box>
-      </Drawer>
+        )}
+      </SideDrawer>
 
     </>
   );

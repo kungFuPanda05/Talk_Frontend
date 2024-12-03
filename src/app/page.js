@@ -248,7 +248,6 @@ export default function Home() {
 
   const handleChatSelect = (chatId) => {
     // if (chatId >= 1) fetchMessages(chatId);
-    console.log("call reaching to handle chat select");
     setSelectedChat(chatId);
     setChats((prevState) => {
       return prevState.map((chat) =>
@@ -306,15 +305,17 @@ export default function Home() {
     setReqSent(true);
   }
 
-  const handleReqStatus = async (status) => {
+  const handleReqStatus = async (status, friendId) => {
     try {
-      let response = await api.post('/api/friend/set-status', { status, strangerId });
+      let response = await api.post('/api/friend/set-status', { status, strangerId: (friendId || strangerId) });
       toast.success(response.data.messages);
       if (status === "reject") {
         setIsReject(true);
       } else if (status === 'accept') {
         socketRef.current.emit('send-request-accept');
         setIsAccept(true);
+        fetchChats();
+      } else if(status === "block"){
         fetchChats();
       }
     } catch (error) {
@@ -340,7 +341,7 @@ export default function Home() {
       <NavBar />
       <div className={`${styles.chat}`}>
         <div className={`${styles['chat-list']}`}>
-          <ChatList chats={chats} handleChatSelect={handleChatSelect} selectedChat={selectedChat} randomConnect={randomConnect} setConnecting={setConnecting} setSelectedChat={setSelectedChat} dont={dont} fetchChats={fetchChats} />
+          <ChatList chats={chats} handleChatSelect={handleChatSelect} selectedChat={selectedChat} randomConnect={randomConnect} setConnecting={setConnecting} setSelectedChat={setSelectedChat} dont={dont} fetchChats={fetchChats} handleReqStatus={handleReqStatus} />
         </div>
         <div className={`${styles['chat-area']}`}>
           {connecting ? (

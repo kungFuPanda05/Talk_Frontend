@@ -55,7 +55,7 @@
     background-color: white;
     z-index: 10;
     padding-top: 5px;
-    padding-bottom: 30px;
+    padding-bottom: 10px;
     box-shadow: 0px 0px 3px rgb(171, 170, 170);
     // background-color: rgb(237, 239, 239);
     // background-color: whitesmoke;
@@ -75,7 +75,8 @@
     margin: auto;
     display: flex;
     justify-content: space-between;
-    background-color: rgb(240,242,245);
+    // background-color: rgb(241, 243, 246);
+    background-color: white;
     .search-bar{
         flex: 1;
     }

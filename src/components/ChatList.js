@@ -30,6 +30,7 @@ import MoreIcon from '@mui/icons-material/MoreVert';
 import { toast } from "react-toastify";
 import apiError from "@/utils/apiError";
 import api from "@/utils/api";
+import SideDrawer from "./SideDrawer";
 
 const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setConnecting, setSelectedChat, dont, fetchChats, handleReqStatus }) => {
     let [limit, setLimit] = useState(10);
@@ -37,9 +38,14 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
     let [search, setSearch] = useState("");
     const [anchorEl, setAnchorEl] = useState(null);
     const [anchorElChats, setAnchorElChats] = useState(null);
+    const [anchorElUsersStatus, setAnchorElUsersStatus] = useState(null);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [reportDescription, setReportDescription] = useState("");
     const [friendId, setFriendId] = useState("");
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [nonChatListStatus, setNonChatListStatus] = useState("");
+    const [nonChatList, setNonChatList] = useState([]);
+    const [menuAnchor, setMenuAnchor] = useState(null);
 
     const isOpen = Boolean(anchorEl);
 
@@ -62,6 +68,16 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
     const handleChatsMenuClose = (event) => {
         event.stopPropagation();
         setAnchorElChats(null);
+    };
+
+    const handleUsersStatusMenuOpen = (event, id) => {
+        setMenuAnchor(event.currentTarget);
+        setAnchorElUsersStatus(id); // Track which menu is open
+    };
+    
+    const handleUsersStatusMenuClose = () => {
+        setMenuAnchor(null);
+        setAnchorElUsersStatus(null); // Reset menu state
     };
 
     const deleteChat = async (chatId) => {
@@ -145,11 +161,44 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
     };
 
     const handleBlockedUsersDrawer = (e) => {
+        setNonChatListStatus("blocked");
+        setIsDrawerOpen(true);
         handleChatsMenuClose(e);
     }
     const handleRejectedReqDrawer = (e) => {
+        setNonChatListStatus("rejected");
+        setIsDrawerOpen(true)
         handleChatsMenuClose(e);
     }
+    const fetchNonChatList = async () => {
+        try {
+            let response = await api.get(`/api/user/${nonChatListStatus}-users`);
+            setNonChatList(response.data.users);
+            toast.success(response.data.message, {
+                position: 'top-center',
+                hideProgressBar: false
+            });
+        } catch (error) {
+            apiError(error);
+        }
+    }
+
+    const handleDeleteFriend = async (friendId) => {
+        try{
+            let response = await api.post(`/api/friend/delete-friend/${friendId}`);
+            toast.success(response.data.message, {
+                position: 'top-center',
+                hideProgressBar: false
+            });
+            fetchNonChatList();
+        }catch(error){
+            apiError(error);
+        }
+    }
+
+    useEffect(() => {
+        if (nonChatListStatus) fetchNonChatList();
+    }, [nonChatListStatus])
 
     useEffect(() => {
         fetchChats(search, limit, page)
@@ -176,7 +225,7 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                     <Menu
                         id="chat-options-menu"
                         anchorEl={anchorElChats}
-                        open={anchorElChats?true:false}
+                        open={anchorElChats ? true : false}
                         onClose={handleChatsMenuClose}
                         anchorOrigin={{
                             vertical: "top",
@@ -321,6 +370,91 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                     <Button onClick={handleReport} color="primary" variant="contained">Submit</Button>
                 </DialogActions>
             </Dialog>
+
+            <SideDrawer heading={nonChatListStatus === "blocked" ? "Blocked Users" : "Rejected Users"} secondaryHeading={nonChatListStatus === "blocked" ? "List of blocked users" : "list of rejected user friend requests"} isDrawerOpen={isDrawerOpen} setIsDrawerOpen={setIsDrawerOpen}>
+                {nonChatList.length > 0 ? (
+                    <List sx={{ marginTop: 1, flexGrow: 1 }}>
+                        {nonChatList.map((nonChat) => (
+                            <ListItem
+                            key={nonChat.id}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                padding: 1,
+                                borderRadius: 3,
+                                backgroundColor: '#f5f5f5',
+                                marginTop: '10px'
+                            }}
+                            >
+                                {/* Avatar with reduced spacing */}
+                                <Avatar src={nonChat.avatar} alt={nonChat.name} sx={{ marginRight: 1, width: 40, height: 40 }} />
+
+                                    
+                                {/* Friend Name */}
+                                <Box sx={{ flex: 1 }}>
+                                    <ListItemText
+                                        primary={nonChat.name}
+                                        primaryTypographyProps={{ sx: { fontWeight: 'bold' } }}
+
+                                    />
+                                    <Typography
+                                        sx={{
+                                            fontSize: '0.6rem', // Smaller font size
+                                            color: 'gray', // Greyish color
+                                            fontWeight: 250, // Light font weight
+                                            marginBottom: 1,
+                                        }}
+                                    >
+                                        <div style={{ width: '6px', height: '6px', backgroundColor: 'red', borderRadius: '50%', display: 'inline-block', marginRight: '3px', marginBottom: '0.4px' }}></div>{"Offline"}
+                                    </Typography>
+                                </Box>
+
+                                {/* Action Buttons */}
+                                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                    <IconButton
+                                        size="large"
+                                        aria-label="show more"
+                                        aria-controls={isOpen ? "users-status-options-menu" : undefined}
+                                        aria-haspopup="true"
+                                        onClick={(e) => handleUsersStatusMenuOpen(e, nonChat.id)}
+                                        sx={{
+                                            height: '100%',
+                                        }}
+                                        >
+                                        <MoreIcon style={{ fontSize: "1rem" }} />
+                                    </IconButton>
+                                    <Menu
+                                        id="chat-options-menu"
+                                        anchorEl={anchorElUsersStatus === nonChat.id ? menuAnchor : null} // Only open for the correct ID
+                                        open={(anchorElUsersStatus && anchorElUsersStatus == nonChat.id) ? true : false}
+                                        onClose={handleUsersStatusMenuClose}
+                                        anchorOrigin={{
+                                            vertical: "top",
+                                            horizontal: "right",
+                                        }}
+                                        transformOrigin={{
+                                            vertical: "top",
+                                            horizontal: "right",
+                                        }}
+                                    >
+                                        {nonChatListStatus=="blocked"?(
+
+                                            <MenuItem style={{ fontSize: '0.7rem' }} onClick={handleBlockedUsersDrawer}>Unblock</MenuItem>
+                                        ):(
+                                            <MenuItem style={{ fontSize: '0.7rem' }} onClick={handleRejectedReqDrawer}>Recover</MenuItem>
+                                        )}
+                                        <MenuItem style={{ fontSize: '0.7rem' }} onClick={() => handleDeleteFriend(nonChat.id)}>Delete</MenuItem>
+                                    </Menu>
+                                </Box>
+                            </ListItem>
+                        ))}
+                    </List>
+
+                ) : (
+                    <NoDataFound heading={nonChatListStatus === "blocked" ? "No blocked users" : "No rejected requests"} text={nonChatListStatus === "blocked" ? "Blocked users list will appear here" : "Rejected Users friend request will apear here"} />
+
+                )}
+            </SideDrawer>
         </div>
     )
 }
