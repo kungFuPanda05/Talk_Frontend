@@ -49,10 +49,14 @@ export default function Home() {
   const [isReqRecieved, setReqReceived] = useState(false);
   const [isAccept, setIsAccept] = useState(false);
   const [isReject, setIsReject] = useState(false);
+  const [isOnlineUsers, setIsOnlineUsers] = useState({});
+  const [isOnlineChatUsers, setIsOnlineChatUsers] = useState({});
 
   const socketRef = useRef();
   const selectedChatRef = useRef(selectedChat);
   const selfIdRef = useRef(selfId);
+  const isOnlineUsersRef = useRef(isOnlineUsers);
+  const isOnlineChatUsersRef = useRef(isOnlineChatUsers);
 
   const token = Cookies.get('token');
 
@@ -64,7 +68,7 @@ export default function Home() {
       apiError(error);
     }
   }
-  const fetchChats = async (search="", limit=10, page=1) => {
+  const fetchChats = async (search = "", limit = 10, page = 1) => {
     try {
       let response = await api.get('/api/chat/chat-list', {
         params: {
@@ -76,6 +80,11 @@ export default function Home() {
         let finalChatList = [strangerChat, ...response.data.result];
         setChats(finalChatList);
       } else setChats(response.data.result);
+      let obj = {};
+      response.data.result.map(user => {
+        obj[user.friendId] = user.friendOnlineStatus;
+      });
+      setIsOnlineChatUsers(obj);
     } catch (error) {
       apiError(error);
     }
@@ -137,6 +146,23 @@ export default function Home() {
         toast.info("Stranger has accepted the friend request");
       })
 
+      socketRef.current.on('online', (userId) => {
+        // console.log(`The user with id: ${userId} came online`);
+        // console.log("Old is online users state(Online): ", isOnlineUsers);
+        if (isOnlineChatUsersRef.current.hasOwnProperty(userId)) setIsOnlineChatUsers(prevState => { return { ...prevState, [userId]: 1 } });
+        else if (isOnlineUsersRef.current.hasOwnProperty(userId)) setIsOnlineUsers(prevState => { return { ...prevState, [userId]: 1 } });
+        // setIsOnlineUsers(prevState => { return {...prevState, [userId]: 1}});
+        // setIsOnlineUsers({...isOnlineUsers, [userId]: 1});
+      })
+
+      socketRef.current.on('offline', (userId) => {
+        // console.log(`The user with id: ${userId} got offline`);
+        // console.log("Old isOnline users state(Offline): ", isOnlineUsers);
+        if (isOnlineChatUsersRef.current.hasOwnProperty(userId)) setIsOnlineChatUsers(prevState => { return { ...prevState, [userId]: 0 } });
+        else if (isOnlineUsersRef.current.hasOwnProperty(userId)) setIsOnlineUsers(prevState => { return { ...prevState, [userId]: 0 } });
+        // setIsOnlineUsers(prevState => { return {...prevState, [userId]: 0}});
+        // setIsOnlineUsers({...isOnlineUsers, [userId]: 0});
+      })
 
       socketRef.current.on('error', (error) => {
         toast.error(error.message);
@@ -153,6 +179,17 @@ export default function Home() {
       }
     };
   }, []);
+
+  // useEffect(() => {
+  //   console.log("The online users are: ", isOnlineUsers);
+  //   isOnlineUsersRef.current = isOnlineUsers;
+  // }, [isOnlineUsers])
+
+  // useEffect(() => {
+  //   console.log("The online chat users are: ", isOnlineChatUsers);
+  //   isOnlineChatUsersRef.current = isOnlineChatUsers;
+  // }, [isOnlineChatUsers])
+
   useEffect(() => {
     if (strangerId && selfId) fetchFriendRequestDetails();
   }, [strangerId, selfId]);
@@ -244,7 +281,7 @@ export default function Home() {
       apiError(error);
     }
   }
-  
+
 
   const handleChatSelect = (chatId) => {
     // if (chatId >= 1) fetchMessages(chatId);
@@ -315,7 +352,7 @@ export default function Home() {
         socketRef.current.emit('send-request-accept');
         setIsAccept(true);
         fetchChats();
-      } else if(status === "block"){
+      } else if (status === "block") {
         fetchChats();
       }
     } catch (error) {
@@ -341,7 +378,21 @@ export default function Home() {
       <NavBar />
       <div className={`${styles.chat}`}>
         <div className={`${styles['chat-list']}`}>
-          <ChatList chats={chats} handleChatSelect={handleChatSelect} selectedChat={selectedChat} randomConnect={randomConnect} setConnecting={setConnecting} setSelectedChat={setSelectedChat} dont={dont} fetchChats={fetchChats} handleReqStatus={handleReqStatus} />
+          <ChatList
+            chats={chats}
+            handleChatSelect={handleChatSelect}
+            selectedChat={selectedChat}
+            randomConnect={randomConnect}
+            setConnecting={setConnecting}
+            setSelectedChat={setSelectedChat}
+            dont={dont}
+            fetchChats={fetchChats}
+            handleReqStatus={handleReqStatus}
+            isOnlineUsers={isOnlineUsers}
+            setIsOnlineUsers={setIsOnlineUsers}
+            isOnlineChatUsers={isOnlineChatUsers}
+            setIsOnlineChatUsers={setIsOnlineChatUsers}
+          />
         </div>
         <div className={`${styles['chat-area']}`}>
           {connecting ? (

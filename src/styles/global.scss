@@ -170,3 +170,11 @@ input{
   box-shadow: none;
   background-color: rgb(203, 202, 202);
 }
+.online{
+  width: 8px; // Circle size
+    height: 8px;
+    border-radius: 50%;
+    background-color: #00ff62; // Green if online, red if offline
+    margin-left: 5px;
+    // box-shadow: 0px 0px 0px 2px #66FF00;
+}

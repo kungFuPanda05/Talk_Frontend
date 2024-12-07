@@ -32,7 +32,7 @@ import apiError from "@/utils/apiError";
 import api from "@/utils/api";
 import SideDrawer from "./SideDrawer";
 
-const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setConnecting, setSelectedChat, dont, fetchChats, handleReqStatus }) => {
+const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setConnecting, setSelectedChat, dont, fetchChats, handleReqStatus, isOnlineUsers, setIsOnlineUsers, isOnlineChatUsers, setIsOnlineChatUsers }) => {
     let [limit, setLimit] = useState(10);
     let [page, setPage] = useState(1);
     let [search, setSearch] = useState("");
@@ -74,7 +74,7 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
         setMenuAnchor(event.currentTarget);
         setAnchorElUsersStatus(id); // Track which menu is open
     };
-    
+
     const handleUsersStatusMenuClose = () => {
         setMenuAnchor(null);
         setAnchorElUsersStatus(null); // Reset menu state
@@ -173,6 +173,12 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
     const fetchNonChatList = async () => {
         try {
             let response = await api.get(`/api/user/${nonChatListStatus}-users`);
+            let obj = {};
+            response.data.users.map(user => {
+                if (user.Online > 0) obj[user.id] = 1;
+                else obj[user.id] = 0;
+            });
+            setIsOnlineUsers(obj);
             setNonChatList(response.data.users);
             toast.success(response.data.message, {
                 position: 'top-center',
@@ -184,14 +190,14 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
     }
 
     const handleDeleteFriend = async (friendId) => {
-        try{
+        try {
             let response = await api.post(`/api/friend/delete-friend/${friendId}`);
             toast.success(response.data.message, {
                 position: 'top-center',
                 hideProgressBar: false
             });
             fetchNonChatList();
-        }catch(error){
+        } catch (error) {
             apiError(error);
         }
     }
@@ -278,11 +284,22 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                             </Badge>
                         </ListItemAvatar>
                         <ListItemText
-                            primary={chat.chatName}
+                            primary={
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <span>{chat.chatName}</span>
+                                    {isOnlineChatUsers[chat.friendId]==true && 
+                                        <div
+                                            className="online"
+                                        ></div>
+                                    
+                                    }
+                                </div>
+                            }
                             secondary={chat.Last_Message?.content ?? "No messages yet..."}
                             primaryTypographyProps={{ className: styles['chat-name'] }}
                             secondaryTypographyProps={{ className: styles['chat-message'] }}
                         />
+
                         <Box
                             sx={{
                                 display: 'flex',
@@ -376,20 +393,20 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                     <List sx={{ marginTop: 1, flexGrow: 1 }}>
                         {nonChatList.map((nonChat) => (
                             <ListItem
-                            key={nonChat.id}
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                padding: 1,
-                                borderRadius: 3,
-                                backgroundColor: '#f5f5f5',
-                                marginTop: '10px'
-                            }}
+                                key={nonChat.id}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    padding: 1,
+                                    borderRadius: 3,
+                                    backgroundColor: '#f5f5f5',
+                                    marginTop: '10px'
+                                }}
                             >
                                 {/* Avatar with reduced spacing */}
                                 <Avatar src={nonChat.avatar} alt={nonChat.name} sx={{ marginRight: 1, width: 40, height: 40 }} />
 
-                                    
+
                                 {/* Friend Name */}
                                 <Box sx={{ flex: 1 }}>
                                     <ListItemText
@@ -405,7 +422,7 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                                             marginBottom: 1,
                                         }}
                                     >
-                                        <div style={{ width: '6px', height: '6px', backgroundColor: 'red', borderRadius: '50%', display: 'inline-block', marginRight: '3px', marginBottom: '0.4px' }}></div>{"Offline"}
+                                        <div style={{ width: '6px', height: '6px', backgroundColor: isOnlineUsers[nonChat.id] ? "green" : 'red', borderRadius: '50%', display: 'inline-block', marginRight: '3px', marginBottom: '0.4px' }}></div>{isOnlineUsers[nonChat.id] ? "Online" : "Offline"}
                                     </Typography>
                                 </Box>
 
@@ -420,7 +437,7 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                                         sx={{
                                             height: '100%',
                                         }}
-                                        >
+                                    >
                                         <MoreIcon style={{ fontSize: "1rem" }} />
                                     </IconButton>
                                     <Menu
@@ -437,10 +454,10 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                                             horizontal: "right",
                                         }}
                                     >
-                                        {nonChatListStatus=="blocked"?(
+                                        {nonChatListStatus == "blocked" ? (
 
                                             <MenuItem style={{ fontSize: '0.7rem' }} onClick={handleBlockedUsersDrawer}>Unblock</MenuItem>
-                                        ):(
+                                        ) : (
                                             <MenuItem style={{ fontSize: '0.7rem' }} onClick={handleRejectedReqDrawer}>Recover</MenuItem>
                                         )}
                                         <MenuItem style={{ fontSize: '0.7rem' }} onClick={() => handleDeleteFriend(nonChat.id)}>Delete</MenuItem>
