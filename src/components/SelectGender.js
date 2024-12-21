@@ -13,7 +13,7 @@ import { Check, Male, Female, Shuffle } from "@mui/icons-material";
 
 import styles from '../styles/selectGender.module.scss'
 
-const SelectGender = ({ setConnecting, selectedGender, setSelectedGender, setDont }) => {
+const SelectGender = ({ setConnecting, selectedGender, setSelectedGender, setDont, profile }) => {
     const [checked, setChecked] = useState(false);
 
     const handleGenderSelect = (gender) => {
@@ -32,7 +32,7 @@ const SelectGender = ({ setConnecting, selectedGender, setSelectedGender, setDon
                 </Typography>
             </div>
             <div className={styles['point-box']}>
-                <Typography variant="body1">Current point: <strong>7</strong></Typography>
+                <Typography variant="body1">Current coins: <strong>{profile.coins}</strong></Typography>
             </div>
             <div className={styles['icon-box']}>
                 <div

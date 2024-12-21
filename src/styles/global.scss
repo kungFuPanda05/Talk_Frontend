@@ -12,36 +12,44 @@ $primary-color: #007bff;
 }
 
 
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box !important;
 }
-.black{
+
+.black {
   border: 2px solid black !important;
 }
-.red{
+
+.red {
   border: 2px solid red !important;
 }
-.green{
+
+.green {
   border: 2px solid green !important;
 }
-.grey{
+
+.grey {
   border: 2px solid grey !important;
 }
-.blue{
+
+.blue {
   border: 2px solid blue !important;
 }
-.pink{
+
+.pink {
   border: 2px solid pink !important;
 }
-body{
+
+body {
   height: 100vh;
   width: 100vw;
   // border: 2px solid black;
   overflow: hidden;
 }
-input{
+
+input {
   all: unset;
   background-color: white;
   height: 100%;
@@ -49,52 +57,63 @@ input{
   padding: 15px;
   // box-sizing: border-box;
 }
-.primary-background{
+
+.primary-background {
   background-color: $primary-color;
 }
+
 .primary-font {
   color: white;
   font-size: 2rem;
   font-family: cursive;
   text-shadow: 1px 1px 3px black;
 }
-.search{
+
+.search {
   border-radius: 6px;
   height: 100%;
   position: relative;
-  .search-icon{
+
+  .search-icon {
     position: absolute;
-    top: 50%; 
+    top: 50%;
     transform: translatey(-50%);
     left: 2%;
   }
-  input{
+
+  input {
     padding-left: 35px;
     width: 100%;
   }
+
   box-shadow: 2px 2px 3px 0.1px rgb(49, 102, 167);
 }
 
 @media (max-width: 900px) {
+
   /* Styles for tablets and mobile devices */
   .nav-search {
     display: none;
   }
 }
+
 @media (max-width: 400px) {
+
   /* Styles for tablets and mobile devices */
   .primary-font {
     font-size: 1.5rem;
   }
 }
+
 @media (max-width: 300px) {
+
   /* Styles for tablets and mobile devices */
   .primary-font {
     font-size: 1.2rem;
   }
 }
 
-.abs-center{
+.abs-center {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -102,41 +121,51 @@ input{
 }
 
 #scrollableChatBox {
+
   /* For WebKit browsers (Chrome, Safari) */
   &::-webkit-scrollbar {
-      width: 2px; /* Adjust width as needed */
+    width: 2px;
+    /* Adjust width as needed */
   }
 
   &::-webkit-scrollbar-track {
-      background: #f1f1f1; /* Background of the track */
+    background: #f1f1f1;
+    /* Background of the track */
   }
 
   &::-webkit-scrollbar-thumb {
-      background: #888; /* Color of the scrollbar handle */
-      border-radius: 2px;
+    background: #888;
+    /* Color of the scrollbar handle */
+    border-radius: 2px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-      background: #555; /* Color when hovered */
+    background: #555;
+    /* Color when hovered */
   }
 
   /* For Firefox */
   scrollbar-width:none;
-  scrollbar-color: #888 #f1f1f1; /* Thumb color, track color */
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling for WebKit browsers */
+  scrollbar-color: #888 #f1f1f1;
+  /* Thumb color, track color */
+  -webkit-overflow-scrolling: touch;
+  /* Smooth scrolling for WebKit browsers */
 }
 
-.auto-scroll{
+.auto-scroll {
   overflow: auto;
 }
-.full-height{
+
+.full-height {
   height: 100%;
 }
-.infinite-scroll-component__outerdiv{
+
+.infinite-scroll-component__outerdiv {
   width: 100%;
   // border: 2px solid yellow
 }
-.infinite-scroll-component{
+
+.infinite-scroll-component {
   width: 100%;
   min-height: 100%;
   display: flex;
@@ -144,6 +173,7 @@ input{
   justify-content: flex-end;
   // border: 2px dotted blue;
 }
+
 // .MuiBadge-badge{
 //   // font-size: 0.7rem;
 //   // min-width: 18px;
@@ -155,26 +185,38 @@ input{
 //   // border: 0.1px solid white;
 // }
 
-.M-bg{
+.M-bg {
   background-color: rgb(201, 232, 250);
 }
-.F-bg{
+
+.F-bg {
   background-color: rgb(244, 227, 246);
 }
-.R-bg{
+
+.R-bg {
   background-color: rgb(217, 241, 217);
 }
-.disable{
+
+.disable {
   cursor: not-allowed;
   border: none;
   box-shadow: none;
   background-color: rgb(203, 202, 202);
 }
-.online{
+
+.online {
   width: 8px; // Circle size
-    height: 8px;
-    border-radius: 50%;
-    background-color: #00ff62; // Green if online, red if offline
-    margin-left: 5px;
-    // box-shadow: 0px 0px 0px 2px #66FF00;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #00ff62; // Green if online, red if offline
+  margin-left: 5px;
+  // box-shadow: 0px 0px 0px 2px #66FF00;
+}
+
+.offline {
+  width: 8px; // Circle size
+  height: 8px;
+  border-radius: 50%;
+  background-color: red; // Green if online, red if offline
+  margin-left: 5px;
 }

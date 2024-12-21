@@ -23,10 +23,14 @@ import apiError from '@/utils/apiError';
 import { toast } from 'react-toastify';
 import NoDataFound from './NoDataFound';
 import SideDrawer from './SideDrawer';
+import ProfileModal from './ProfileModal';
 
-const NavBar = () => {
+const NavBar = ({ profile, isReqRecieved, isAccept, isReject, setIsOnlineUsers, isOnlineUsers, handleLaterReqStatus }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [friendReq, setFriendReq] = useState([]);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [friendReqCount, setFriendReqCount] = useState(0);
+
 
   const toggleDrawer = (open) => (event) => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -39,30 +43,44 @@ const NavBar = () => {
     try {
       let response = await api.get(`${process.env.NEXT_PUBLIC_API_URL}/api/friend/get-friend-requests`);
       setFriendReq(response.data.response);
+      let obj = {};
+      response.data.response.map(user => {
+        user = user.SentRequests;
+        if (user.Online > 0) obj[user.id] = 1;
+        else obj[user.id] = 0;
+      });
+      setIsOnlineUsers(obj);
     } catch (error) {
       apiError(error);
     }
   }
-  const handleReqStatus = async (status, strangerId) => {
+  // const handleLaterReqStatus = async (status, strangerId) => {
+  //   try {
+  //     let response = await api.post('/api/friend/set-status', { status, strangerId });
+  //     toast.success(response.data.messages);
+  //     fetchFriendReq();
+  //   } catch (error) {
+  //     apiError(error);
+  //   }
+
+  // }
+  const fetchFriendReqCount = async () => {
     try {
-      let response = await api.post('/api/friend/set-status', { status, strangerId });
-      toast.success(response.data.messages);
-      fetchFriendReq();
-      // if (status === "reject") {
-      //   // setIsReject(true);
-      // } else if (status === 'accept') {
-      //   socketRef.current.emit('send-request-accept');
-      //   // setIsAccept(true);
-      // }
+      let response = await api.get(`${process.env.NEXT_PUBLIC_API_URL}/api/friend/get-friend-requests-count`);
+      setFriendReqCount(response.data.count);
     } catch (error) {
       apiError(error);
     }
-
   }
 
   useEffect(() => {
-    fetchFriendReq();
-  }, [])
+    fetchFriendReqCount();
+  }, [isReqRecieved, isAccept, isReject,])
+
+  useEffect(() => {
+    if (isDrawerOpen) fetchFriendReq();
+  }, [isDrawerOpen])
+
 
   return (
     <>
@@ -90,11 +108,11 @@ const NavBar = () => {
                 aria-label="show notifications"
                 onClick={toggleDrawer(true)}
               >
-                <Badge badgeContent={friendReq?.length} color="error">
+                <Badge badgeContent={friendReqCount > 0 ? friendReqCount : null} color="error">
                   <NotificationsIcon style={{ color: 'white' }} />
                 </Badge>
               </IconButton>
-              <IconButton size="large" edge="end" aria-label="account of current user">
+              <IconButton onClick={() => setProfileOpen(true)} size="large" edge="end" aria-label="account of current user">
                 <AccountCircle style={{ color: 'white' }} />
               </IconButton>
             </Box>
@@ -120,6 +138,7 @@ const NavBar = () => {
                   padding: 1,
                   borderRadius: 3,
                   backgroundColor: '#f5f5f5',
+                  marginY: 1
                 }}
               >
                 {/* Avatar with reduced spacing */}
@@ -140,7 +159,20 @@ const NavBar = () => {
                       marginBottom: 1,
                     }}
                   >
-                    {request.createdAt?.split('T')[0]}
+                    {/* {request.createdAt?.split('T')[0]} */}
+                    <div style={{ display: 'flex', gap: '2px', alignItems: 'center', marginTop: '-5px', padding: '0' }}>
+                      <div
+                        className={isOnlineUsers[request.SentRequests.id] ? "online" : "offline"}
+                        style={{ margin: '0' }}
+                      >
+
+                      </div>
+                      <div>
+                        {isOnlineUsers[request.SentRequests.id] ? "Online" : "Offline"}
+
+                      </div>
+
+                    </div>
                   </Typography>
                 </Box>
 
@@ -151,7 +183,7 @@ const NavBar = () => {
                     color="success"
                     size="small"
                     sx={{ minWidth: '50px', fontSize: '0.65rem', padding: '2px 8px' }}
-                    onClick={() => handleReqStatus('accept', request.SentRequests.id)}
+                    onClick={() => { handleLaterReqStatus('accept', request.SentRequests.id).then(res => fetchFriendReq()) }}
                   >
                     Accept
                   </Button>
@@ -160,7 +192,7 @@ const NavBar = () => {
                     color="error"
                     size="small"
                     sx={{ minWidth: '50px', fontSize: '0.65rem', padding: '2px 8px' }}
-                    onClick={() => handleReqStatus('reject', request.SentRequests.id)}
+                    onClick={() => { handleLaterReqStatus('reject', request.SentRequests.id).then(res => fetchFriendReq()) }}
                   >
                     Reject
                   </Button>
@@ -174,6 +206,9 @@ const NavBar = () => {
 
         )}
       </SideDrawer>
+
+      {/*Profile modal*/}
+      <ProfileModal profile={profile} profileOpen={profileOpen} setProfileOpen={setProfileOpen} />
 
     </>
   );

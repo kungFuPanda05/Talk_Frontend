@@ -51,12 +51,14 @@ export default function Home() {
   const [isReject, setIsReject] = useState(false);
   const [isOnlineUsers, setIsOnlineUsers] = useState({});
   const [isOnlineChatUsers, setIsOnlineChatUsers] = useState({});
+  const [profile, setProfile] = useState({});
 
   const socketRef = useRef();
   const selectedChatRef = useRef(selectedChat);
   const selfIdRef = useRef(selfId);
   const isOnlineUsersRef = useRef(isOnlineUsers);
   const isOnlineChatUsersRef = useRef(isOnlineChatUsers);
+  const chatListRef = useRef(chats);
 
   const token = Cookies.get('token');
 
@@ -91,6 +93,7 @@ export default function Home() {
   }
   useEffect(() => {
     fetchUserId();
+    fetchProfile();
   }, []);
 
   useEffect(() => {
@@ -139,18 +142,25 @@ export default function Home() {
 
       socketRef.current.on('receive-request', (res) => {
         setReqReceived(true);
+        // fetchFriendRequestDetails();
       });
 
       socketRef.current.on('receive-request-accept', (res) => {
         // setIsAccept(true);
+        fetchChats();
         toast.info("Stranger has accepted the friend request");
       })
 
+      socketRef.current.on('receive-request-accept-later', (message) => {
+        toast.info(message);
+        fetchChats();
+      })
+
       socketRef.current.on('online', (userId) => {
-        // console.log(`The user with id: ${userId} came online`);
+        console.log(`The user with id: ${userId} came online`);
         // console.log("Old is online users state(Online): ", isOnlineUsers);
         if (isOnlineChatUsersRef.current.hasOwnProperty(userId)) setIsOnlineChatUsers(prevState => { return { ...prevState, [userId]: 1 } });
-        else if (isOnlineUsersRef.current.hasOwnProperty(userId)) setIsOnlineUsers(prevState => { return { ...prevState, [userId]: 1 } });
+        if (isOnlineUsersRef.current.hasOwnProperty(userId)) setIsOnlineUsers(prevState => { return { ...prevState, [userId]: 1 } });
         // setIsOnlineUsers(prevState => { return {...prevState, [userId]: 1}});
         // setIsOnlineUsers({...isOnlineUsers, [userId]: 1});
       })
@@ -159,15 +169,17 @@ export default function Home() {
         // console.log(`The user with id: ${userId} got offline`);
         // console.log("Old isOnline users state(Offline): ", isOnlineUsers);
         if (isOnlineChatUsersRef.current.hasOwnProperty(userId)) setIsOnlineChatUsers(prevState => { return { ...prevState, [userId]: 0 } });
-        else if (isOnlineUsersRef.current.hasOwnProperty(userId)) setIsOnlineUsers(prevState => { return { ...prevState, [userId]: 0 } });
+        if (isOnlineUsersRef.current.hasOwnProperty(userId)) setIsOnlineUsers(prevState => { return { ...prevState, [userId]: 0 } });
         // setIsOnlineUsers(prevState => { return {...prevState, [userId]: 0}});
         // setIsOnlineUsers({...isOnlineUsers, [userId]: 0});
       })
 
       socketRef.current.on('error', (error) => {
+        console.log("on the frontend receiving error");
         toast.error(error.message);
         setRandomConnect(false);
         setConnecting(false);
+        setDont(false);
       });
     })
 
@@ -180,28 +192,34 @@ export default function Home() {
     };
   }, []);
 
-  // useEffect(() => {
-  //   console.log("The online users are: ", isOnlineUsers);
-  //   isOnlineUsersRef.current = isOnlineUsers;
-  // }, [isOnlineUsers])
+  useEffect(() => {
+    console.log("The online users are: ", isOnlineUsers);
+    isOnlineUsersRef.current = isOnlineUsers;
+  }, [isOnlineUsers])
 
-  // useEffect(() => {
-  //   console.log("The online chat users are: ", isOnlineChatUsers);
-  //   isOnlineChatUsersRef.current = isOnlineChatUsers;
-  // }, [isOnlineChatUsers])
+  useEffect(() => {
+    console.log("The online chat users are: ", isOnlineChatUsers);
+    isOnlineChatUsersRef.current = isOnlineChatUsers;
+  }, [isOnlineChatUsers])
 
   useEffect(() => {
     if (strangerId && selfId) fetchFriendRequestDetails();
   }, [strangerId, selfId]);
 
+  useEffect(()=>{
+    chatListRef.current = chats;
+  }, [chats]);
+
   useEffect(() => {
     console.log("Random connect use effect triggered: ", randomConnect);
     if (!randomConnect) {
+      console.log("reaching to set chats 2");
       setChats(chats.slice(1));
       socketRef.current.emit('leave-room');
+      fetchProfile();
     } else {
       console.log("random connect trigger  hu gya");
-
+      console.log("reaching to set chats 3");
       setChats([{
         id: 0,
         chatName: "Stranger",
@@ -361,6 +379,25 @@ export default function Home() {
 
   }
 
+  const handleLaterReqStatus = async (status, friendId) => {
+    try {
+      let response = await api.post('/api/friend/set-status', { status, strangerId: (friendId || strangerId) });
+      toast.success(response.data.messages);
+      if (status === "reject") {
+        setIsReject(true);
+      } else if (status === 'accept') {
+        socketRef.current.emit('send-request-accept-later', friendId);
+        setIsAccept(true);
+        fetchChats();
+      } else if (status === "block") {
+        fetchChats();
+      }
+    } catch (error) {
+      apiError(error);
+    }
+
+  }
+
   const fetchFriendRequestDetails = async () => {
     try {
       let response = await api.post('/api/friend/fetch-friend-status', { selfId, strangerId });
@@ -372,10 +409,26 @@ export default function Home() {
       apiError(error);
     }
   }
+  const fetchProfile = async () => {
+    try {
+      let response = await api.get('/api/user/getProfile');
+      setProfile(response.data.profile);
+    } catch (error) {
+      apiError(error);
+    }
+  }
 
   return (
     <div className={styles.home}>
-      <NavBar />
+      <NavBar 
+        profile={profile} 
+        isReqRecieved={isReqRecieved} 
+        isAccept={isAccept} 
+        isReject={isReject} 
+        setIsOnlineUsers={setIsOnlineUsers} 
+        isOnlineUsers={isOnlineUsers}
+        handleLaterReqStatus={handleLaterReqStatus}  
+      />
       <div className={`${styles.chat}`}>
         <div className={`${styles['chat-list']}`}>
           <ChatList
@@ -437,6 +490,7 @@ export default function Home() {
               selectedGender={selectedGender}
               setSelectedGender={setSelectedGender}
               setDont={setDont}
+              profile={profile}
             />
           )}
 

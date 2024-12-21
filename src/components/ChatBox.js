@@ -63,7 +63,7 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
     };
 
     useEffect(()=>{
-        sendMessageInputRef.current.focus();
+        sendMessageInputRef.current?.focus();
         setPage(1);
         setLimit(10);
         setSearch("");
