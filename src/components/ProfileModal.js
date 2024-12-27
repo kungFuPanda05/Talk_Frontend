@@ -32,8 +32,8 @@ export default function ProfileModal({ profile, profileOpen, setProfileOpen }) {
                     <Typography variant="h5" fontWeight="bold">Your can edit your name</Typography>
 
                     <Stack direction="row" justifyContent="space-between" my={2}>
-                        <Typography variant="body2">
-                            <AccessTime sx={{ mr: 1 }} /> 3 hrs
+                        <Typography variant="h7">
+                            {profile.gender==='M'?"Male":"Female"}
                         </Typography>
                         <Typography variant="h6" fontWeight="bold">
                             {profile.coins}C

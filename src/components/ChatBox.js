@@ -15,6 +15,8 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { toast } from "react-toastify";
 import apiError from "@/utils/apiError";
 import api from "@/utils/api";
+import Image from "next/image";
+import pending from '../../public/images/pending.png'
 
 
 const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMessage, selectedChat, setRandomConnect, setConnecting, isStrangerLeftChat, handleConnectAgain, strangerId, isReqSent, isReqRecieved, isAccept, isReject, sendFriendRequest, handleReqStatus, setNormalMessageList }) => {
@@ -39,35 +41,35 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
             const response = await api.get(`/api/message/fetch-messages/${chatId}`, {
                 params: { search, limit, page },
             });
-    
+
             const newMessages = response.data.result;
-    
+
             // If the number of fetched messages is less than the limit, no more messages are available
             if (newMessages.length < limit) {
                 setHasMore(false);
             }
-    
+
             // Update the page and append the new messages to the list
             setPage((prevPage) => prevPage + 1);
-            if(more) setNormalMessageList((prevMessages) => [...newMessages, ...prevMessages]);
+            if (more) setNormalMessageList((prevMessages) => [...newMessages, ...prevMessages]);
             else setNormalMessageList(newMessages);
         } catch (error) {
             apiError(error);
             setHasMore(false); // Stop infinite scroll if there's an error
         }
     };
-    
-    
+
+
     const scrollToBottom = () => {
         messageEndRef.current?.scrollIntoView();
     };
 
-    useEffect(()=>{
+    useEffect(() => {
         sendMessageInputRef.current?.focus();
         setPage(1);
         setLimit(10);
         setSearch("");
-        if(selectedChat>=1) {
+        if (selectedChat >= 1) {
             setNormalMessageList([]);
             fetchMessages(selectedChat, "", 100, 1);
         }
@@ -93,10 +95,10 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                 >Add friend</Button>
             }
             {!selectedChat && isReqRecieved && !isReject && !isAccept &&
-                (<div style={{position: 'absolute'}}>
+                (<div style={{ position: 'absolute' }}>
                     <Button variant="contained" color="primary"
                         style={{
-                            
+
                             width: '80px',
                             fontSize: '10px',
                             background: 'red',
@@ -137,12 +139,23 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                 >
                     <div ref={messageEndRef} />
                     {messages.map((message, index) => (
-                        <div key={index} className={`${styles['message-bar']} ${selfId === message.userId ? styles['message-sent'] : ''}`}>
-                            {message.content}
-                        </div>
+                        <>
+                            {/* <div className={`${selfId === message.userId ? 'flex-ending' : 'none'}`} style={{ marginBottom: '3px', marginTop: '1px' }}>
+                                <Image src="/images/pending.png" alt="Pending" width={15} height={17} />
+
+                            </div> */}
+                            <Typography className={`${selfId === message.userId ? 'flex-ending' : 'flex-starting'}`} variant="body2" align="center" color="textSecondary" style={{marginBottom: '3px', marginTop: '1px', fontSize: '0.8em'}}>
+                                4:56 A.M
+                            </Typography>
+                            <div key={index} className={`${styles['message-bar']} ${selfId === message.userId ? styles['message-sent'] : ''}`}>
+                                {message.content}
+                            </div>
+                        </>
 
                     ))}
                     {/* Add a dummy div at the bottom for scrolling */}
+
+
 
 
                 </InfiniteScroll>

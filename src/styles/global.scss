@@ -220,3 +220,13 @@ input {
   background-color: red; // Green if online, red if offline
   margin-left: 5px;
 }
+.flex-ending{
+  align-self: flex-end;
+}
+.flex-starting{
+  align-items: flex-start;
+  align-self: flex-start;
+}
+.none{
+  display: none;
+}
