@@ -16,6 +16,7 @@ import ChatList from "@/components/ChatList";
 import SelectGender from "@/components/SelectGender";
 import { toast } from "react-toastify";
 import { v4 as uuidv4 } from 'uuid';
+import { getSocketInstance } from "@/utils/socket";
 
 
 export default function Home() {
@@ -49,6 +50,7 @@ export default function Home() {
   const chatListRef = useRef(chats);
 
   const token = Cookies.get('token');
+  const socket = getSocketInstance();
 
   const fetchUserId = async () => {
     try {
@@ -65,11 +67,12 @@ export default function Home() {
           limit, search, page
         }
       });
-      let strangerChat = chats.find((chat) => chat.chatName === "Stranger");
-      if (strangerChat) {
-        let finalChatList = [strangerChat, ...response.data.result];
-        setChats(finalChatList);
-      } else setChats(response.data.result);
+      setChats((prevChats)=>{
+        let strangerChat = prevChats.find((chat) => chat.chatName === "Stranger");
+        if(strangerChat) return [strangerChat, ...response.data.result];
+        else return response.data.result;
+      });
+      
       let obj = {};
       response.data.result.map(user => {
         obj[user.friendId] = user.friendOnlineStatus;
@@ -79,47 +82,76 @@ export default function Home() {
       apiError(error);
     }
   }
+  const registeredEvents = new Set();
+
+  function safeEventListener(socket, eventName, callback) {
+    // Check if the event is already registered
+    if (!registeredEvents.has(eventName)) {
+      socket.on(eventName, callback);
+      registeredEvents.add(eventName);
+      console.log(`Event '${eventName}' registered.`);
+    } else {
+      console.log(`Event '${eventName}' is already registered.`);
+    }
+  }
+
   useEffect(() => {
     fetchUserId();
     fetchProfile();
   }, []);
 
   useEffect(() => {
-    socketRef.current = io(`${process.env.NEXT_PUBLIC_API_URL}`, {
-      extraHeaders: {
-        Authorization: `Bearer ${token}` // Pass JWT token here
-      }
-    });
-    socketRef.current.on('connect', () => {
+  
+    if (!socket) {
+      console.log("No socket");
+      return;
+    }
+  
+    if (!socket.connected) {
+      console.log("Socket not connected. Connecting now...");
+      socket.connect(); // Explicitly connect the socket
+    }
+    const clearEvents = () => {
+      registeredEvents.forEach(eventName => {
+        socket.off(eventName);
+        console.log(`Event '${eventName}' cleared.`);
+      });
+      registeredEvents.clear();
+    };
+  
+    clearEvents();
+  
+    safeEventListener(socket, 'connect', () => {
       console.log("The connection has been established with backend");
-
-      socketRef.current.on('message', (message) => {
+  
+      safeEventListener(socket, 'message', (message) => {
         console.log("The message received is: ", message);
-
         console.log("The message.chatId: ", message.chatId, " selectedChatRef.current: ", selectedChatRef.current);
+  
         if (message.chatId == 0) setRandomMessageList((prevState) => [message, ...prevState]);
+  
         if (message.chatId == selectedChatRef.current) {
           if (message.chatId == 0) {
             handleMessageNotifications(message, false);
-          } else if(selfIdRef.current!==message.userId) {
+          } else if (selfIdRef.current !== message.userId) {
             setNormalMessageList((prevState) => [message, ...prevState]);
+            handleMessageNotifications(message, false);
           }
         } else {
-          //send notifications to those chats
           handleMessageNotifications(message);
-          console.log("printing the selfId and message.userId: ", selfId, message.userId);
-          if (parseInt(selfIdRef.current, 10) !== parseInt(message.userId, 10)) { //meaning the message is received message
+          console.log("Printing the selfId and message.userId: ", selfId, message.userId);
+          if (parseInt(selfIdRef.current, 10) !== parseInt(message.userId, 10)) {
             updateNewMessageCount(message.chatId, selfIdRef.current);
           }
         }
       });
-
-      socketRef.current.on('user-left', (data) => {
+  
+      safeEventListener(socket, 'user-left', (data) => {
         setStrangerLeftChat(true);
         setRandomConnect(false);
       });
-
-      socketRef.current.on('strangers-connected', (response) => {
+  
+      safeEventListener(socket, 'strangers-connected', (response) => {
         if (response.success) {
           setRandomConnect(true);
           setConnecting(false);
@@ -127,58 +159,52 @@ export default function Home() {
           toast.success(response.message);
         }
       });
-
-      socketRef.current.on('receive-request', (res) => {
+  
+      safeEventListener(socket, 'receive-request', (res) => {
         setReqReceived(true);
-        // fetchFriendRequestDetails();
       });
-
-      socketRef.current.on('receive-request-accept', (res) => {
-        // setIsAccept(true);
+  
+      safeEventListener(socket, 'receive-request-accept', (res) => {
         fetchChats();
         toast.info("Stranger has accepted the friend request");
-      })
-
-      socketRef.current.on('receive-request-accept-later', (message) => {
+      });
+  
+      safeEventListener(socket, 'receive-request-accept-later', (message) => {
         toast.info(message);
         fetchChats();
-      })
-
-      socketRef.current.on('online', (userId) => {
+      });
+  
+      safeEventListener(socket, 'online', (userId) => {
         console.log(`The user with id: ${userId} came online`);
-        // console.log("Old is online users state(Online): ", isOnlineUsers);
-        if (isOnlineChatUsersRef.current.hasOwnProperty(userId)) setIsOnlineChatUsers(prevState => { return { ...prevState, [userId]: 1 } });
-        if (isOnlineUsersRef.current.hasOwnProperty(userId)) setIsOnlineUsers(prevState => { return { ...prevState, [userId]: 1 } });
-        // setIsOnlineUsers(prevState => { return {...prevState, [userId]: 1}});
-        // setIsOnlineUsers({...isOnlineUsers, [userId]: 1});
-      })
-
-      socketRef.current.on('offline', (userId) => {
-        // console.log(`The user with id: ${userId} got offline`);
-        // console.log("Old isOnline users state(Offline): ", isOnlineUsers);
-        if (isOnlineChatUsersRef.current.hasOwnProperty(userId)) setIsOnlineChatUsers(prevState => { return { ...prevState, [userId]: 0 } });
-        if (isOnlineUsersRef.current.hasOwnProperty(userId)) setIsOnlineUsers(prevState => { return { ...prevState, [userId]: 0 } });
-        // setIsOnlineUsers(prevState => { return {...prevState, [userId]: 0}});
-        // setIsOnlineUsers({...isOnlineUsers, [userId]: 0});
-      })
-
-      socketRef.current.on('error', (error) => {
-        console.log("on the frontend receiving error");
+        if (isOnlineChatUsersRef.current.hasOwnProperty(userId)) setIsOnlineChatUsers(prevState => { return { ...prevState, [userId]: 1 }; });
+        if (isOnlineUsersRef.current.hasOwnProperty(userId)) setIsOnlineUsers(prevState => { return { ...prevState, [userId]: 1 }; });
+      });
+  
+      safeEventListener(socket, 'offline', (userId) => {
+        console.log(`The user with id: ${userId} got offline`);
+        if (isOnlineChatUsersRef.current.hasOwnProperty(userId)) setIsOnlineChatUsers(prevState => { return { ...prevState, [userId]: 0 }; });
+        if (isOnlineUsersRef.current.hasOwnProperty(userId)) setIsOnlineUsers(prevState => { return { ...prevState, [userId]: 0 }; });
+      });
+  
+      safeEventListener(socket, 'error', (error) => {
+        console.log("Socket error: ", error);
         toast.error(error.message);
         setRandomConnect(false);
         setConnecting(false);
         setDont(false);
       });
-    })
-
+    });
+  
     return () => {
-      if (socketRef?.current) {
-        socketRef.current.disconnect();
+      if (socket) {
+        clearEvents();
+        socket.disconnect();
         setRandomConnect(false);
         console.log("Disconnected from chat");
       }
     };
   }, []);
+  
 
   useEffect(() => {
     console.log("The online users are: ", isOnlineUsers);
@@ -194,20 +220,16 @@ export default function Home() {
     if (strangerId && selfId) fetchFriendRequestDetails();
   }, [strangerId, selfId]);
 
-  useEffect(()=>{
+  useEffect(() => {
     chatListRef.current = chats;
   }, [chats]);
 
   useEffect(() => {
-    console.log("Random connect use effect triggered: ", randomConnect);
     if (!randomConnect) {
-      console.log("reaching to set chats 2");
       setChats(chats.slice(1));
-      socketRef.current.emit('leave-room');
+      socket.emit('leave-room');
       fetchProfile();
     } else {
-      console.log("random connect trigger  hu gya");
-      console.log("reaching to set chats 3");
       setChats([{
         id: 0,
         chatName: "Stranger",
@@ -231,7 +253,7 @@ export default function Home() {
     if (connecting) {
       setStrangerId("");
       if (!selectedGender) toast.error("Please select the preffered gender first");
-      socketRef.current.emit('join-room', { gwant: selectedGender });
+      socket.emit('join-room', { gwant: selectedGender });
       setMessageContent("");
       setRandomMessageList([]);
     }
@@ -271,17 +293,17 @@ export default function Home() {
 
   const sendMessage = async () => {
     if (!messageContent) return;
-    socketRef.current.emit("message", { messageContent, chatId: (selectedChat || 0) });
+    socket.emit("message", { messageContent, chatId: (selectedChat || 0) });
     if (selectedChat) {
       const identityKey = uuidv4();
-      setNormalMessageList((prevState) => [{identityKey, userId: selfId, createdAt: null, content: messageContent, chatId: (selectedChat || 0)}, ...prevState]);
+      setNormalMessageList((prevState) => [{ identityKey, userId: selfId, createdAt: null, content: messageContent, chatId: (selectedChat || 0) }, ...prevState]);
       await createMessage(messageContent, identityKey);
       fetchChats();
     }
     setMessageContent("");
   };
 
-  const createMessage = async (messageContent, identityKey=null) => {
+  const createMessage = async (messageContent, identityKey = null) => {
     try {
       let response = await api.post('/api/message/create-message', { chatId: selectedChat, content: messageContent, identityKey });
       setNormalMessageList((prevState) =>
@@ -291,7 +313,7 @@ export default function Home() {
             : message
         )
       );
-      
+
       toast.success(response.data.messages);
     } catch (error) {
       apiError(error);
@@ -350,7 +372,7 @@ export default function Home() {
   const sendFriendRequest = async () => {
     try {
       let response = await api.post('/api/friend/send-friend-req', { selfId, strangerId });
-      socketRef.current.emit('send-request');
+      socket.emit('send-request');
       toast.success(response.data.messages);
     } catch (error) {
       apiError(error);
@@ -365,7 +387,7 @@ export default function Home() {
       if (status === "reject") {
         setIsReject(true);
       } else if (status === 'accept') {
-        socketRef.current.emit('send-request-accept');
+        socket.emit('send-request-accept');
         setIsAccept(true);
         fetchChats();
       } else if (status === "block") {
@@ -384,7 +406,7 @@ export default function Home() {
       if (status === "reject") {
         setIsReject(true);
       } else if (status === 'accept') {
-        socketRef.current.emit('send-request-accept-later', friendId);
+        socket.emit('send-request-accept-later', friendId);
         setIsAccept(true);
         fetchChats();
       } else if (status === "block") {
@@ -418,14 +440,14 @@ export default function Home() {
 
   return (
     <div className={styles.home}>
-      <NavBar 
-        profile={profile} 
-        isReqRecieved={isReqRecieved} 
-        isAccept={isAccept} 
-        isReject={isReject} 
-        setIsOnlineUsers={setIsOnlineUsers} 
+      <NavBar
+        profile={profile}
+        isReqRecieved={isReqRecieved}
+        isAccept={isAccept}
+        isReject={isReject}
+        setIsOnlineUsers={setIsOnlineUsers}
         isOnlineUsers={isOnlineUsers}
-        handleLaterReqStatus={handleLaterReqStatus}  
+        handleLaterReqStatus={handleLaterReqStatus}
       />
       <div className={`${styles.chat}`}>
         <div className={`${styles['chat-list']}`}>
