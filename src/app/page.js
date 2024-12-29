@@ -3,21 +3,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
-  Grid,
-  List,
-  ListItem,
-  ListItemAvatar,
-  Avatar,
-  ListItemText,
-  Badge,
-  Typography,
-  InputBase,
-  Paper,
-  IconButton,
   CircularProgress,
 } from "@mui/material";
-import { Search, AttachFile, InsertEmoticon, Send } from "@mui/icons-material";
-import RandConnect from "@/components/RandConnect";
 import Cookies from "js-cookie";
 import io from 'socket.io-client'
 import api from "@/utils/api";
@@ -28,6 +15,7 @@ import ChatBox from "@/components/ChatBox";
 import ChatList from "@/components/ChatList";
 import SelectGender from "@/components/SelectGender";
 import { toast } from "react-toastify";
+import { v4 as uuidv4 } from 'uuid';
 
 
 export default function Home() {
@@ -113,7 +101,7 @@ export default function Home() {
         if (message.chatId == selectedChatRef.current) {
           if (message.chatId == 0) {
             handleMessageNotifications(message, false);
-          } else {
+          } else if(selfIdRef.current!==message.userId) {
             setNormalMessageList((prevState) => [message, ...prevState]);
           }
         } else {
@@ -285,15 +273,25 @@ export default function Home() {
     if (!messageContent) return;
     socketRef.current.emit("message", { messageContent, chatId: (selectedChat || 0) });
     if (selectedChat) {
-      await createMessage(messageContent);
+      const identityKey = uuidv4();
+      setNormalMessageList((prevState) => [{identityKey, userId: selfId, createdAt: null, content: messageContent, chatId: (selectedChat || 0)}, ...prevState]);
+      await createMessage(messageContent, identityKey);
       fetchChats();
     }
     setMessageContent("");
   };
 
-  const createMessage = async (messageContent) => {
+  const createMessage = async (messageContent, identityKey=null) => {
     try {
-      let response = await api.post('/api/message/create-message', { chatId: selectedChat, content: messageContent });
+      let response = await api.post('/api/message/create-message', { chatId: selectedChat, content: messageContent, identityKey });
+      setNormalMessageList((prevState) =>
+        prevState.map((message) =>
+          message.identityKey === response.data.identityKey
+            ? { ...message, createdAt: response.data.createdAt }
+            : message
+        )
+      );
+      
       toast.success(response.data.messages);
     } catch (error) {
       apiError(error);

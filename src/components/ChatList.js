@@ -31,6 +31,8 @@ import { toast } from "react-toastify";
 import apiError from "@/utils/apiError";
 import api from "@/utils/api";
 import SideDrawer from "./SideDrawer";
+import { formatDate } from "@/utils/functions";
+import Dropdown from "react-bootstrap/Dropdown";
 
 const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setConnecting, setSelectedChat, dont, fetchChats, handleReqStatus, isOnlineUsers, setIsOnlineUsers, isOnlineChatUsers, setIsOnlineChatUsers }) => {
     let [limit, setLimit] = useState(10);
@@ -122,44 +124,6 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
         }
     };
 
-    const formatDate = (date) => {
-        if (!date) return "N/A"
-        const inputDate = new Date(date); // Convert input to a Date object
-        const today = new Date(); // Get today's date
-
-        const formatTime = (date) => {
-            const hours = date.getHours();
-            const minutes = date.getMinutes();
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            const formattedHours = hours % 12 || 12; // Convert 0 to 12 for 12-hour format
-            const formattedMinutes = minutes.toString().padStart(2, '0');
-            return `${formattedHours}:${formattedMinutes} ${ampm}`;
-        };
-
-        if (
-            inputDate.getFullYear() === today.getFullYear() &&
-            inputDate.getMonth() === today.getMonth() &&
-            inputDate.getDate() === today.getDate()
-        ) {
-            return formatTime(inputDate); // Return time in AM/PM format
-        }
-
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate() - 1);
-        if (
-            inputDate.getFullYear() === yesterday.getFullYear() &&
-            inputDate.getMonth() === yesterday.getMonth() &&
-            inputDate.getDate() === yesterday.getDate()
-        ) {
-            return 'Yesterday';
-        }
-
-        const day = inputDate.getDate().toString().padStart(2, '0');
-        const month = (inputDate.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-indexed
-        const year = inputDate.getFullYear();
-        return `${day}/${month}/${year}`;
-    };
-
     const handleBlockedUsersDrawer = (e) => {
         setNonChatListStatus("blocked");
         setIsDrawerOpen(true);
@@ -203,8 +167,8 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
     }
 
     useEffect(() => {
-        if (nonChatListStatus) fetchNonChatList();
-    }, [nonChatListStatus])
+        if (nonChatListStatus && isDrawerOpen) fetchNonChatList();
+    }, [isDrawerOpen])
 
     useEffect(() => {
         fetchChats(search, limit, page)
@@ -287,11 +251,11 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                             primary={
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
                                     <span>{chat.chatName}</span>
-                                    {isOnlineChatUsers[chat.friendId]==true && 
+                                    {isOnlineChatUsers[chat.friendId] == true &&
                                         <div
                                             className="online"
                                         ></div>
-                                    
+
                                     }
                                 </div>
                             }
@@ -308,7 +272,7 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                             }}
                         >
                             {/* More Icon Button */}
-                            <IconButton
+                            {/* <IconButton
                                 size="large"
                                 aria-label="show more"
                                 aria-controls={isOpen ? "chat-options-menu" : undefined}
@@ -316,9 +280,49 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                                 onClick={handleMenuOpen}
                             >
                                 <MoreIcon style={{ fontSize: "0.8rem" }} />
-                            </IconButton>
+                            </IconButton> */}
 
-                            {/* Small Modal (Menu) */}
+
+                            <Dropdown>
+                                <Dropdown.Toggle
+                                    // variant="secondary"
+                                    // size="sm"
+                                    // id={`dropdown-${chat.id}`}
+                                    className="options-toggle"
+                                    style={{ border: 'none', background: 'none' }}
+                                >
+                                    <IconButton
+                                        size="large"
+                                        aria-label="show more"
+                                        aria-controls={isOpen ? "chat-options-menu" : undefined}
+                                        aria-haspopup="true"
+                                        sx={{
+                                            height: '30px',
+                                            width: '30px',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        <MoreIcon style={{ fontSize: "0.8rem" }} />
+                                    </IconButton>
+                                </Dropdown.Toggle>
+
+                                <Dropdown.Menu>
+                                    <Dropdown.Item onClick={(e) => handleAction("report", e, chat.id, chat.friendId)}>
+                                        Report
+                                    </Dropdown.Item>
+                                    <Dropdown.Item onClick={(e) => handleAction("block", e, chat.id, chat.friendId)}>
+                                        Block
+                                    </Dropdown.Item>
+                                    <Dropdown.Item onClick={(e) => handleAction("delete", e, chat.id, chat.friendId)}>
+                                        Delete
+                                    </Dropdown.Item>
+                                </Dropdown.Menu>
+                            </Dropdown>
+
+
+                            {/* Small Modal (Menu)
                             <Menu
                                 id="chat-options-menu"
                                 anchorEl={anchorEl}
@@ -336,7 +340,7 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                                 <MenuItem style={{ fontSize: '0.7rem' }} onClick={(e) => handleAction("report", e, chat.id, chat.friendId)}>Report</MenuItem>
                                 <MenuItem style={{ fontSize: '0.7rem' }} onClick={(e) => handleAction("block", e, chat.id, chat.friendId)}>Block</MenuItem>
                                 <MenuItem style={{ fontSize: '0.7rem' }} onClick={(e) => handleAction("delete", e, chat.id, chat.friendId)}>Delete</MenuItem>
-                            </Menu>
+                            </Menu> */}
 
                             {/* Timestamp */}
                             <Typography

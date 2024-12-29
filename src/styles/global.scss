@@ -230,3 +230,14 @@ input {
 .none{
   display: none;
 }
+.options-toggle {
+  background: none;
+  border: none;
+  color: gray;
+}
+.options-toggle:hover {
+  color: black;
+}
+.options-toggle::after {
+  display: none !important; /* Removes the default dropdown caret */
+}

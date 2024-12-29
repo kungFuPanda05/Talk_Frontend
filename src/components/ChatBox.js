@@ -17,6 +17,7 @@ import apiError from "@/utils/apiError";
 import api from "@/utils/api";
 import Image from "next/image";
 import pending from '../../public/images/pending.png'
+import { formatDate } from "@/utils/functions";
 
 
 const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMessage, selectedChat, setRandomConnect, setConnecting, isStrangerLeftChat, handleConnectAgain, strangerId, isReqSent, isReqRecieved, isAccept, isReject, sendFriendRequest, handleReqStatus, setNormalMessageList }) => {
@@ -140,13 +141,16 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                     <div ref={messageEndRef} />
                     {messages.map((message, index) => (
                         <>
-                            {/* <div className={`${selfId === message.userId ? 'flex-ending' : 'none'}`} style={{ marginBottom: '3px', marginTop: '1px' }}>
-                                <Image src="/images/pending.png" alt="Pending" width={15} height={17} />
+                            {message.createdAt?(
+                                <Typography className={`${selfId === message.userId ? 'flex-ending' : 'flex-starting'}`} variant="body2" align="center" color="textSecondary" style={{marginBottom: '3.5px', marginTop: '1.5px', fontSize: '0.7em'}}>
+                                    {formatDate(message.createdAt)}
+                                </Typography>
+                            ): (
+                                <div className={`${selfId === message.userId ? 'flex-ending' : 'none'}`} style={{ marginBottom: '3px', marginTop: '1px' }}>
+                                    <Image src="/images/pending.png" alt="Pending" width={15} height={17} />
 
-                            </div> */}
-                            <Typography className={`${selfId === message.userId ? 'flex-ending' : 'flex-starting'}`} variant="body2" align="center" color="textSecondary" style={{marginBottom: '3px', marginTop: '1px', fontSize: '0.8em'}}>
-                                4:56 A.M
-                            </Typography>
+                                </div>
+                            )}
                             <div key={index} className={`${styles['message-bar']} ${selfId === message.userId ? styles['message-sent'] : ''}`}>
                                 {message.content}
                             </div>
