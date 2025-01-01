@@ -32,7 +32,7 @@ const SelectGender = ({ setConnecting, selectedGender, setSelectedGender, setDon
                 </Typography>
             </div>
             <div className={styles['point-box']}>
-                <Typography variant="body1">Current coins: <strong>{profile.coins}</strong></Typography>
+                <Typography variant="body1">Current coins: <strong>{profile?.coins}</strong></Typography>
             </div>
             <div className={styles['icon-box']}>
                 <div

@@ -82,7 +82,7 @@ export default function ProfileModal({ profile, profileOpen, setProfileOpen }) {
                                         style={{marginLeft: 0, marginRight: '3px'}}
                                     ></div>
                                     <div>
-                                        {profile.email}
+                                        {profile?.email}
 
                                     </div>
                                 </Typography>
@@ -92,7 +92,7 @@ export default function ProfileModal({ profile, profileOpen, setProfileOpen }) {
 
                     <Divider style={{ color: 'black', border: '0.1px solid black' }} />
                     <Typography variant="body1" my={2}>
-                        {profile.friendsCount} friends
+                        {profile?.friendsCount} friends
                     </Typography>
 
                     <Button
