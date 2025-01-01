@@ -142,12 +142,12 @@ const NavBar = ({ profile, isReqRecieved, isAccept, isReject, setIsOnlineUsers, 
                 }}
               >
                 {/* Avatar with reduced spacing */}
-                <Avatar src={request.avatar} alt={request.SentRequests.name} sx={{ marginRight: 1, width: 40, height: 40 }} />
+                <Avatar src={request?.avatar} alt={request?.SentRequests?.name} sx={{ marginRight: 1, width: 40, height: 40 }} />
 
                 {/* Friend Name */}
                 <Box sx={{ flex: 1 }}>
                   <ListItemText
-                    primary={request.SentRequests.name}
+                    primary={request?.SentRequests?.name}
                     primaryTypographyProps={{ sx: { fontWeight: 'bold' } }}
 
                   />
@@ -162,13 +162,13 @@ const NavBar = ({ profile, isReqRecieved, isAccept, isReject, setIsOnlineUsers, 
                     {/* {request.createdAt?.split('T')[0]} */}
                     <div style={{ display: 'flex', gap: '2px', alignItems: 'center', marginTop: '-5px', padding: '0' }}>
                       <div
-                        className={isOnlineUsers[request.SentRequests.id] ? "online" : "offline"}
+                        className={isOnlineUsers[request?.SentRequests?.id] ? "online" : "offline"}
                         style={{ margin: '0' }}
                       >
 
                       </div>
                       <div>
-                        {isOnlineUsers[request.SentRequests.id] ? "Online" : "Offline"}
+                        {isOnlineUsers[request?.SentRequests?.id] ? "Online" : "Offline"}
 
                       </div>
 

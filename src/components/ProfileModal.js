@@ -52,7 +52,7 @@ export default function ProfileModal({ profile, profileOpen, setProfileOpen }) {
                         />
                         <Box>
                             <Stack direction="row" alignItems="center">
-                                <Typography>{profile.name}</Typography>
+                                <Typography>{profile?.name}</Typography>
 
                                 <Rating
                                     value={3}

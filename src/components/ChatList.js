@@ -408,13 +408,13 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                                 }}
                             >
                                 {/* Avatar with reduced spacing */}
-                                <Avatar src={nonChat.avatar} alt={nonChat.name} sx={{ marginRight: 1, width: 40, height: 40 }} />
+                                <Avatar src={nonChat?.avatar} alt={nonChat?.name} sx={{ marginRight: 1, width: 40, height: 40 }} />
 
 
                                 {/* Friend Name */}
                                 <Box sx={{ flex: 1 }}>
                                     <ListItemText
-                                        primary={nonChat.name}
+                                        primary={nonChat?.name}
                                         primaryTypographyProps={{ sx: { fontWeight: 'bold' } }}
 
                                     />
