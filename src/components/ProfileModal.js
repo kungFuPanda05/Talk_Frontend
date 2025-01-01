@@ -33,10 +33,10 @@ export default function ProfileModal({ profile, profileOpen, setProfileOpen }) {
 
                     <Stack direction="row" justifyContent="space-between" my={2}>
                         <Typography variant="h7">
-                            {profile.gender==='M'?"Male":"Female"}
+                            {profile?.gender==='M'?"Male":"Female"}
                         </Typography>
                         <Typography variant="h6" fontWeight="bold">
-                            {profile.coins}C
+                            {profile?.coins}C
                         </Typography>
                     </Stack>
 
