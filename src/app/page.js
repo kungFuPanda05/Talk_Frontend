@@ -128,18 +128,47 @@ export default function Home() {
         console.log("The message received is: ", message);
         console.log("The message.chatId: ", message.chatId, " selectedChatRef.current: ", selectedChatRef.current);
   
-        if (message.chatId == 0) setRandomMessageList((prevState) => [message, ...prevState]);
+        if (message.chatId == 0){
+          if(selfIdRef.current == message.userId){
+            setRandomMessageList((prevState) =>
+              prevState.map((prevMessage) =>
+                prevMessage.identityKey === message.identityKey
+                  ? { ...prevMessage, createdAt: message.createdAt }
+                  : prevMessage
+              )
+            );
+          }else{
+            setRandomMessageList((prevState) => [message, ...prevState]);
+          }
+        }
   
         if (message.chatId == selectedChatRef.current) {
-          if (message.chatId == 0) {
-            handleMessageNotifications(message, false);
-          } else if (selfIdRef.current !== message.userId) {
-            setNormalMessageList((prevState) => [message, ...prevState]);
-            handleMessageNotifications(message, false);
+          // if (message.chatId == 0) {
+          //   handleMessageNotifications(message, false);
+          // } else if (selfIdRef.current !== message.userId) {
+          //   setNormalMessageList((prevState) => [message, ...prevState]);
+          //   handleMessageNotifications(message, false);
+          // }
+          
+          if(selfIdRef.current == message.userId){
+            if(message.chatId){
+              setNormalMessageList((prevState) =>
+                prevState.map((prevMessage) =>
+                  prevMessage.identityKey === message.identityKey
+                    ? { ...prevMessage, createdAt: message.createdAt }
+                    : prevMessage
+                )
+              );
+              fetchChats();
+            }
+          }else{
+            if(message.chatId){
+              setNormalMessageList((prevState) => [message, ...prevState]);
+            }
           }
+          handleMessageNotifications(message, false);
         } else {
           handleMessageNotifications(message);
-          console.log("Printing the selfId and message.userId: ", selfId, message.userId);
           if (parseInt(selfIdRef.current, 10) !== parseInt(message.userId, 10)) {
             updateNewMessageCount(message.chatId, selfIdRef.current);
           }
@@ -188,7 +217,7 @@ export default function Home() {
   
       safeEventListener(socket, 'error', (error) => {
         console.log("Socket error: ", error);
-        toast.error(error.message);
+        apiError(error);
         setRandomConnect(false);
         setConnecting(false);
         setDont(false);
@@ -292,27 +321,30 @@ export default function Home() {
 
 
   const sendMessage = async () => {
-    if (!messageContent) return;
-    socket.emit("message", { messageContent, chatId: (selectedChat || 0) });
-    if (selectedChat) {
-      const identityKey = uuidv4();
-      setNormalMessageList((prevState) => [{ identityKey, userId: selfId, createdAt: null, content: messageContent, chatId: (selectedChat || 0) }, ...prevState]);
-      await createMessage(messageContent, identityKey);
-      fetchChats();
-    }
+    if (!messageContent || !(selectedChat || selectedChat==0)) return;
+    let content = messageContent;
     setMessageContent("");
+    const identityKey = uuidv4();
+    socket.emit("message", { messageContent: content, chatId: selectedChat, identityKey });
+    if (selectedChat) {
+      setNormalMessageList((prevState) => [{ identityKey, userId: selfId, createdAt: null, content: content, chatId: selectedChat }, ...prevState]);
+      // await createMessage(content, identityKey);
+      // fetchChats();
+    }else{
+      setRandomMessageList((prevState) => [{ identityKey, userId: selfId, createdAt: null, content: content, chatId: selectedChat }, ...prevState]);
+    }
   };
 
   const createMessage = async (messageContent, identityKey = null) => {
     try {
       let response = await api.post('/api/message/create-message', { chatId: selectedChat, content: messageContent, identityKey });
-      setNormalMessageList((prevState) =>
-        prevState.map((message) =>
-          message.identityKey === response.data.identityKey
-            ? { ...message, createdAt: response.data.createdAt }
-            : message
-        )
-      );
+      // setNormalMessageList((prevState) =>
+      //   prevState.map((message) =>
+      //     message.identityKey === response.data.identityKey
+      //       ? { ...message, createdAt: response.data.createdAt }
+      //       : message
+      //   )
+      // );
 
       toast.success(response.data.messages);
     } catch (error) {
