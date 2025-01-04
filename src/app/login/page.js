@@ -19,7 +19,7 @@ const Login = () => {
 
     useEffect(() => {
         if (token) router.push("/");
-    }, []);
+    }, [token, router]);
 
     const loginUser = async (e) => {
         e.preventDefault();
