@@ -42,7 +42,7 @@ const Login = () => {
     return (
         <Box className={styles.container}>
             <Box className={styles.loginBox}>
-                <div style={{ textAlign: "center", fontSize: "35px", color: '#007bff', fontWeight: 'bold', textShadow: '1px 1.5px rgb(45, 45, 46)'}}>WeTalk</div>
+                <div style={{ textAlign: "center", fontSize: "35px", color: '#007bff', fontWeight: 'bold', textShadow: '1px 1.5px rgb(45, 45, 46)' }}>WeTalk</div>
                 <form onSubmit={loginUser} className={styles.form}>
                     {/* Email Field */}
                     <TextField
@@ -66,18 +66,18 @@ const Login = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         margin="normal"
-                        // InputProps={{
-                        //     endAdornment: (
-                        //         <InputAdornment position="end">
-                        //             <IconButton
-                        //                 onClick={() => setHidePassword(!hidePassword)}
-                        //                 edge="end"
-                        //             >
-                        //                 {hidePassword ? <VisibilityOff /> : <Visibility />}
-                        //             </IconButton>
-                        //         </InputAdornment>
-                        //     ),
-                        // }}
+                    // InputProps={{
+                    //     endAdornment: (
+                    //         <InputAdornment position="end">
+                    //             <IconButton
+                    //                 onClick={() => setHidePassword(!hidePassword)}
+                    //                 edge="end"
+                    //             >
+                    //                 {hidePassword ? <VisibilityOff /> : <Visibility />}
+                    //             </IconButton>
+                    //         </InputAdornment>
+                    //     ),
+                    // }}
                     />
 
                     {/* Login Button */}
@@ -87,11 +87,12 @@ const Login = () => {
 
                     {/* Footer */}
                     <Typography className={styles.footerText}>
-                        Don't have an account?{" "}
+                        {"Don't have an account? "}
                         <a href="/register" className={styles.link}>
                             Register
                         </a>
                     </Typography>
+
                 </form>
             </Box>
         </Box>
