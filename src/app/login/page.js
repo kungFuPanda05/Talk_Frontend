@@ -1,67 +1,101 @@
-'use client'
+'use client';
 
 import { useEffect, useState } from "react";
-import api from "../../utils/api";
-import { 
-    Box,
-    Input
- } from "@mui/material";
-import imageUploadApi from "@/utils/imagUploadApi";
-import apiError from "@/utils/apiError";
-import { toast } from "react-toastify";
+import { Box, TextField, Button, Typography, IconButton, InputAdornment } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-
+import api from "../../utils/api";
+import apiError from "@/utils/apiError";
+import { toast } from "react-toastify";
+import styles from "../../styles/login.module.scss";
 
 const Login = () => {
-    // const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [hidePassword, setHidePassword] = useState(true);
     const router = useRouter();
-    const token = Cookies.get('token');
-    useEffect(()=>{
-        if(token) router.push('/');
-    }, [])
+    const token = Cookies.get("token");
 
-    const loginUser=async(e)=>{
+    useEffect(() => {
+        if (token) router.push("/");
+    }, []);
+
+    const loginUser = async (e) => {
         e.preventDefault();
-        console.log("logging user: ", email, password);
-        try{
-            const res = await api.post('/api/auth/login', {email, password});
-            if(res?.data?.success){
+        try {
+            const res = await api.post("/api/auth/login", { email, password });
+            if (res?.data?.success) {
                 toast.success(res.data.message, {
-                    position: 'top-center',
-                    hideProgressBar: false
+                    position: "top-center",
+                    hideProgressBar: false,
                 });
                 Cookies.set("token", res?.data?.token);
                 api.defaults.headers.Authorization = `Bearer ${res.data.token}`;
-                router.push('/');
+                router.push("/");
             }
-
-        }catch(error){
+        } catch (error) {
             apiError(error);
         }
-    }
+    };
 
     return (
-        <Box className="registerOuterBox">
-            <form onSubmit={loginUser}>
-                <Box>
-                    <label>Email: </label>
-                    <Box><input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required/></Box>
-                </Box>
-                <Box>
-                    <label>Password:</label>
-                    <Box><input type={hidePassword?"password":"text"} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required/></Box>
-                </Box>
-                <Box mt={1}>
-                    <button>Login</button>
-                </Box>
+        <Box className={styles.container}>
+            <Box className={styles.loginBox}>
+                <div style={{ textAlign: "center", fontSize: "35px", color: '#007bff', fontWeight: 'bold', textShadow: '1px 1.5px rgb(45, 45, 46)'}}>WeTalk</div>
+                <form onSubmit={loginUser} className={styles.form}>
+                    {/* Email Field */}
+                    <TextField
+                        label="Email"
+                        type="email"
+                        variant="outlined"
+                        fullWidth
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        margin="normal"
+                    />
 
-            </form>
+                    {/* Password Field */}
+                    <TextField
+                        label="Password"
+                        type={hidePassword ? "password" : "text"}
+                        variant="outlined"
+                        fullWidth
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        margin="normal"
+                        // InputProps={{
+                        //     endAdornment: (
+                        //         <InputAdornment position="end">
+                        //             <IconButton
+                        //                 onClick={() => setHidePassword(!hidePassword)}
+                        //                 edge="end"
+                        //             >
+                        //                 {hidePassword ? <VisibilityOff /> : <Visibility />}
+                        //             </IconButton>
+                        //         </InputAdornment>
+                        //     ),
+                        // }}
+                    />
+
+                    {/* Login Button */}
+                    <Button type="submit" variant="contained" fullWidth className={styles.button}>
+                        Login
+                    </Button>
+
+                    {/* Footer */}
+                    <Typography className={styles.footerText}>
+                        Don't have an account?{" "}
+                        <a href="/register" className={styles.link}>
+                            Register
+                        </a>
+                    </Typography>
+                </form>
+            </Box>
         </Box>
-    )
-}
+    );
+};
 
 export default Login;

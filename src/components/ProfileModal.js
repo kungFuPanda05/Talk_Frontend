@@ -43,7 +43,7 @@ export default function ProfileModal({ profile, profileOpen, setProfileOpen }) {
                     <Stack direction="row" spacing={2} alignItems="center" mb={3}>
                         <Avatar
                             alt="Profile Pic"
-                            src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-profiles/avatar-2.webp"
+                            src={process.env.NEXT_PUBLIC_API_URL + "/"+ profile?.pic}
                             sx={{
                                 width: 70,
                                 height: 70,

@@ -45,8 +45,11 @@ $primary-color: #007bff;
 body {
   height: 100vh;
   width: 100vw;
-  // border: 2px solid black;
   overflow: hidden;
+  // border: 2px solid black;
+  // background-color: $primary-color !important;
+  // background: linear-gradient(to top right, #0056b3, #3595fc, #66b2ff);
+  // z-index: -1;
 }
 
 input {

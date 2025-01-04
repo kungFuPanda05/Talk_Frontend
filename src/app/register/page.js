@@ -1,24 +1,22 @@
-'use client'
+'use client';
 
 import { useEffect, useState } from "react";
-import api from "../../utils/api";
-import { 
-    Box,
-    Input
- } from "@mui/material";
+import { Box } from "@mui/material";
 import imageUploadApi from "@/utils/imagUploadApi";
 import apiError from "@/utils/apiError";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Cookies from "js-cookie";
+import styles from "@/styles/register.module.scss";
 
-const Register = ()=>{
+const Register = () => {
     const router = useRouter();
-    const token = Cookies.get('token');
-    useEffect(()=>{
-        if(token) router.push('/');
-    }, [])
+    const token = Cookies.get("token");
+
+    useEffect(() => {
+        if (token) router.push("/");
+    }, []);
 
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -32,71 +30,105 @@ const Register = ()=>{
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        console.log(name, gender, email, password);
         const formData = new FormData();
-        formData.append('name', name);
-        formData.append('gender', gender);
-        formData.append('email', email);
-        formData.append('password', password);
-        formData.append('logo', file);
-        try{
-            const res = await imageUploadApi.post('/api/auth/register', formData);
-            console.log(res.data);
-            if(res?.data?.success){
-                toast.success(res.data.message, {
-                    position: 'top-center',
-                    hideProgressBar: false
-                });
-                router.push('/login');
-            }
+        formData.append("name", name);
+        formData.append("gender", gender);
+        formData.append("email", email);
+        formData.append("password", password);
+        formData.append("logo", file);
 
-        }catch(error){
-            console.log("The error occured: ", error);
+        try {
+            const res = await imageUploadApi.post("/api/auth/register", formData);
+            if (res?.data?.success) {
+                toast.success(res.data.message, {
+                    position: "top-center",
+                    hideProgressBar: false,
+                });
+                router.push("/login");
+            }
+        } catch (error) {
             apiError(error);
         }
-
-
-    }
+    };
 
     return (
-        <>
-            <Box className="registerOuterBox">
-                <form onSubmit={handleSubmit}>
-                    <div className="registerDivs">
-                        <label>UserName: </label>
-                        <div className="regInsideDivs"><input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required/></div>
+        <div style={{height: '100%', width: '100%', border: '0.1px solid white', background: 'linear-gradient(to top right,rgb(1, 77, 158),rgb(68, 155, 248),rgb(113, 182, 252))'}}>
+            <Box className={styles.registerOuterBox}>
+                <form onSubmit={handleSubmit} className={styles.form}>
+                    <div style={{ textAlign: "center", fontSize: "35px", color: '#007bff', fontWeight: 'bold', textShadow: '1px 1.5px rgb(45, 45, 46)'}}>WeTalk</div>
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>UserName:</label>
+                        <input
+                            type="text"
+                            placeholder="Name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                            className={styles.input}
+                        />
                     </div>
-                    <div className="registerDivs">
-                        <label>Gender: </label>
-                        <div className="regInsideDivs">
-                            <select value={gender} onChange={(e)=> setGender(e.target.value)} required>
-                                <option value={""}>select</option>
-                                <option value={'M'}>Male</option>
-                                <option value={'F'}>Female</option>
-                            </select>
-                        </div>
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>Gender:</label>
+                        <select
+                            value={gender}
+                            onChange={(e) => setGender(e.target.value)}
+                            required
+                            className={styles.select}
+                        >
+                            <option value="">Select</option>
+                            <option value="M">Male</option>
+                            <option value="F">Female</option>
+                        </select>
                     </div>
-                    <div className="registerDivs">
-                        <label>Email: </label>
-                        <div className="regInsideDivs"><input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required/></div>
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>Email:</label>
+                        <input
+                            type="email"
+                            placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className={styles.input}
+                        />
                     </div>
-                    <div className="registerDivs">
-                        <label>Password:</label>
-                        <div className="regInsideDivs"><input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>Password:</label>
+                        <input
+                            type="password"
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className={styles.input}
+                        />
                     </div>
-                    <div className="registerDivs">
-                        <label>Display picture: </label>
-                        <div className="regInsideDivs"><input type="file" accept="image/*" onChange={handleFileChange}/></div>
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>Display picture:</label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className={styles.fileInput}
+                        />
                     </div>
-                    <div className="registerDivs">
-                        <button type="submit">Register</button>
+                    <div className={styles.inputGroup}>
+                        <button type="submit" className={styles.button}>
+                            Register
+                        </button>
                     </div>
-                    <div>
-                        <h6>Already have an account? <Link href="/login">Sign In</Link> </h6>
+                    <div className={styles.footerText}>
+                        <h6>
+                            Already have an account?{" "}
+                            <Link href="/login" className={styles.link}>
+                                Sign In
+                            </Link>
+                        </h6>
                     </div>
                 </form>
             </Box>
-        </>
-    )
-}
+
+        </div>
+    );
+};
+
 export default Register;
