@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { AttachFile, InsertEmoticon, Send } from "@mui/icons-material";
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { useEffect, useRef, useState } from "react";
+import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from '../styles/chatbox.module.scss'
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { toast } from "react-toastify";
@@ -17,10 +17,12 @@ import apiError from "@/utils/apiError";
 import api from "@/utils/api";
 import Image from "next/image";
 import pending from '../../public/images/pending.png'
-import { formatDate } from "@/utils/functions";
+import { debounce, formatDate } from "@/utils/functions";
+import Typing from "./Typing";
+import { getSocketInstance } from "@/utils/socket";
 
 
-const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMessage, selectedChat, setRandomConnect, setConnecting, isStrangerLeftChat, handleConnectAgain, strangerId, isReqSent, isReqRecieved, isAccept, isReject, sendFriendRequest, handleReqStatus, setNormalMessageList }) => {
+const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMessage, selectedChat, setRandomConnect, setConnecting, isStrangerLeftChat, handleConnectAgain, strangerId, isReqSent, isReqRecieved, isAccept, isReject, sendFriendRequest, handleReqStatus, setNormalMessageList, isStrangerTyping, strangerTypingChatId, isTyping, setIsTyping}) => {
     let [limit, setLimit] = useState(100);
     let [page, setPage] = useState(1);
     let [search, setSearch] = useState("");
@@ -31,6 +33,7 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
     const sendMessageInputRef = useRef();
     const messageEndRef = useRef();
 
+    const socket = useMemo(() => getSocketInstance(), []);
     const handleRandomChatDisconnect = () => {
         setRandomConnect(false);
         setRandomChatDisconnected(true);
@@ -80,7 +83,28 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
         scrollToBottom();
     }, [messages]);
 
+    const debouncedSetIsTypingFalse = useCallback(
+        debounce(() => {
+            setIsTyping(false);
+        }, 500),
+        [] // Ensure debounce function is created only once
+    );
 
+    useEffect(() => {
+        if (messageContent && !isTyping) {
+            setIsTyping(true);
+        }
+        debouncedSetIsTypingFalse();
+    }, [messageContent]);
+
+    useEffect(()=>{
+        socket.emit('typing', {chatId: (selectedChat || 0), isTyping: isTyping});
+    },[isTyping]);
+
+    useEffect(()=>{
+        console.log("the strangertyping: ", isStrangerTyping, strangerTypingChatId, selectedChat);
+        if(isStrangerTyping && (strangerTypingChatId==selectedChat || !selectedChat)) scrollToBottom();
+    }, [isStrangerTyping, strangerTypingChatId, selectedChat])
 
     return (
         <div className={styles.container}>
@@ -139,6 +163,7 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                 // }
                 >
                     <div ref={messageEndRef} />
+                    {isStrangerTyping && (strangerTypingChatId==selectedChat || !selectedChat) && <Typing />}
                     {messages.map((message, index) => (
                         <>
                             {message.createdAt?(
@@ -157,11 +182,6 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                         </>
 
                     ))}
-                    {/* Add a dummy div at the bottom for scrolling */}
-
-
-
-
                 </InfiniteScroll>
 
             </div>

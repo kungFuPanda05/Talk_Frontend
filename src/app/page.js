@@ -41,6 +41,9 @@ export default function Home() {
   const [isOnlineUsers, setIsOnlineUsers] = useState({});
   const [isOnlineChatUsers, setIsOnlineChatUsers] = useState({});
   const [profile, setProfile] = useState({});
+  const [isStrangerTyping, setIsStrangerIsTyping] = useState(false);
+  const [strangerTypingChatId, setStrangerTypingChatId] = useState(null);
+  const [isTyping, setIsTyping] = useState(false);
 
   const socketRef = useRef();
   const selectedChatRef = useRef(selectedChat);
@@ -184,7 +187,7 @@ export default function Home() {
         if (response.success) {
           setRandomConnect(true);
           setConnecting(false);
-          setRandomUserIds(response.users);
+          setRandomUserIds(response.users.map(user => user.id));
           toast.success(response.message);
         }
       });
@@ -221,6 +224,10 @@ export default function Home() {
         setRandomConnect(false);
         setConnecting(false);
         setDont(false);
+      });
+      safeEventListener(socket, 'typing-status', (res) => {
+        setIsStrangerIsTyping(res.isTyping);
+        setStrangerTypingChatId(res.chatId);
       });
     });
   
@@ -323,6 +330,7 @@ export default function Home() {
   const sendMessage = async () => {
     if (!messageContent || !(selectedChat || selectedChat==0)) return;
     let content = messageContent;
+    setIsTyping(false);
     setMessageContent("");
     const identityKey = uuidv4();
     socket.emit("message", { messageContent: content, chatId: selectedChat, identityKey });
@@ -535,6 +543,10 @@ export default function Home() {
               sendFriendRequest={sendFriendRequest}
               handleReqStatus={handleReqStatus}
               setNormalMessageList={setNormalMessageList}
+              isStrangerTyping={isStrangerTyping}
+              strangerTypingChatId={strangerTypingChatId}
+              isTyping={isTyping}
+              setIsTyping={setIsTyping}
             />
           ) : (
             <SelectGender

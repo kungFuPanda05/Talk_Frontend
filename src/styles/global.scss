@@ -244,3 +244,40 @@ input {
 .options-toggle::after {
   display: none !important; /* Removes the default dropdown caret */
 }
+
+//for typing component
+@keyframes blink {
+  0% {
+    opacity: 0.3;
+  }
+  33% {
+    opacity: 1;
+  }
+  66% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  margin: 0 4px;
+  background: #555;
+  border-radius: 50%;
+  animation: blink 1.5s infinite;
+}
+
+.dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.6s;
+}
