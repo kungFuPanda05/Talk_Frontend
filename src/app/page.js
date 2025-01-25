@@ -44,6 +44,7 @@ export default function Home() {
   const [isStrangerTyping, setIsStrangerIsTyping] = useState(false);
   const [strangerTypingChatId, setStrangerTypingChatId] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [ratingRange, setRatingRange] = useState([0, 5]); // State for min and max rating
 
   const socketRef = useRef();
   const selectedChatRef = useRef(selectedChat);
@@ -289,7 +290,7 @@ export default function Home() {
     if (connecting) {
       setStrangerId("");
       if (!selectedGender) toast.error("Please select the preffered gender first");
-      socket.emit('join-room', { gwant: selectedGender });
+      socket.emit('join-room', { gwant: selectedGender, miRating: ratingRange[0], maRating: ratingRange[1] });
       setMessageContent("");
       setRandomMessageList([]);
     }
@@ -555,6 +556,8 @@ export default function Home() {
               setSelectedGender={setSelectedGender}
               setDont={setDont}
               profile={profile}
+              ratingRange={ratingRange}
+              setRatingRange={setRatingRange}
             />
           )}
 

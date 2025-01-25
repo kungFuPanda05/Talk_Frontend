@@ -1,5 +1,4 @@
-.container{
-    // border: 2px solid black;
+.container {
     height: 100%;
     width: 100%;
     padding: var(--primary-padding);
@@ -8,26 +7,34 @@
     gap: 5vh;
     overflow-y: auto;
     scrollbar-width: thin;
+    align-items: center;
 }
-.header{
-    // border: 2px solid red;
+
+.header {
     text-align: center;
     width: 100%;
+    // margin-bottom: 20px;
+
+    .title {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
 }
-.point-box{
-    // border: 2px dotted green;
+
+.point-box {
     text-align: center;
+    font-size: 1.2rem;
 }
-.icon-box{
-    // border: 2px solid green;
+
+.icon-box {
     display: flex;
-    gap: 50px;
+    gap: 30px;
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-    // height: 60%;
-    div{
-        border-radius: 100px;
+
+    div {
+        border-radius: 50%;
         height: 150px;
         position: relative;
         display: flex;
@@ -35,35 +42,87 @@
         align-items: center;
         justify-content: center;
         aspect-ratio: 1 / 1;
+        cursor: pointer;
+        transition: transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+
+        &:hover {
+            transform: scale(1.1);
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        &.selected {
+            border: 3px solid var(--primary-color);
+        }
     }
 }
-.icon{
-    font-size: 80px;
+
+.icon {
+    font-size: 60px;
 }
-.male{
+
+.male {
     color: blue;
 }
-.female{
+
+.female {
     color: pink;
 }
-.random{
+
+.random {
     color: green;
 }
-.m-container{
+
+.m-container {
     background-color: rgb(220, 236, 245);
 }
-.f-container{
+
+.f-container {
     background-color: rgb(245, 240, 241);
 }
-.r-container{
+
+.r-container {
     background-color: rgb(217, 241, 217);
 }
-.do-not{
-    // border: 2px dotted pink;
+
+.rating-box {
     text-align: center;
+    // margin: 20px 0;
+
+    h6 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    .MuiSlider-root {
+        color: var(--primary-color); // Customize slider color
+        width: 80%;
+        margin: 0 auto;
+    }
+
+    .MuiSlider-markLabel {
+        font-size: 0.8rem;
+    }
+
+    .MuiSlider-valueLabel {
+        font-size: 0.9rem;
+        top: -30px; // Adjust the value label position
+    }
 }
-.buttons{
+
+
+.do-not {
+    text-align: center;
+    // margin-top: 20px;
+}
+
+.buttons {
     display: flex;
     justify-content: center;
     gap: 20px;
+
+    // button {
+    //     font-size: 1rem;
+    //     padding: 10px 20px;
+    // }
 }
