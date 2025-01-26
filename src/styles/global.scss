@@ -281,3 +281,9 @@ input {
 .dot:nth-child(3) {
   animation-delay: 0.6s;
 }
+.divider{
+  height: 1px;
+  background-color: rgb(200, 199, 199);
+  width: 95%;
+  margin: auto;
+}

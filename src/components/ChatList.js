@@ -227,130 +227,144 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
             {/* Chat List */}
             <List>
                 {chats?.map((chat, index) => (
-                    <ListItem key={index} className={`${styles['chat-list-item']} ${(chat.id == selectedChat && !chat.gender) ? styles['chat-select'] : ""} ${(chat.gender) ? `${chat.gender}-bg` : ""}`} onClick={() => handleChatSelect(chat.id)}>
-                        <ListItemAvatar>
-                            <Badge
-                                badgeContent={chat.newMessageCount > 0 ? chat.newMessageCount : null}
-                                color="error"
-                                sx={{
-                                    "& .MuiBadge-badge": {
-                                        fontSize: '0.7rem',
-                                        minWidth: '17.6px',
-                                        height: '18px',
-                                        padding: 0,
-                                        top: '4px',
-                                        right: '5px',
-                                        border: '0.1px solid white',
-                                    },
-                                }}
-                            >
-                                <Avatar alt={chat.chatName} src={chat.avatar} />
-                            </Badge>
-                        </ListItemAvatar>
-                        <ListItemText
-                            primary={
-                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    <span>{chat.chatName}</span>
-                                    {isOnlineChatUsers[chat.friendId] == true &&
-                                        <div
-                                            className="online"
-                                        ></div>
-
-                                    }
-                                </div>
-                            }
-                            secondary={chat.Last_Message?.content ?? "No messages yet..."}
-                            primaryTypographyProps={{ className: styles['chat-name'] }}
-                            secondaryTypographyProps={{ className: styles['chat-message'] }}
-                        />
-
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'flex-end'
-                            }}
-                        >
-                            {/* More Icon Button */}
-                            {/* <IconButton
-                                size="large"
-                                aria-label="show more"
-                                aria-controls={isOpen ? "chat-options-menu" : undefined}
-                                aria-haspopup="true"
-                                onClick={handleMenuOpen}
-                            >
-                                <MoreIcon style={{ fontSize: "0.8rem" }} />
-                            </IconButton> */}
-
-
-                            <Dropdown>
-                                <Dropdown.Toggle
-                                    // variant="secondary"
-                                    // size="sm"
-                                    // id={`dropdown-${chat.id}`}
-                                    className="options-toggle"
-                                    style={{ border: 'none', background: 'none' }}
+                    <>
+                        <ListItem key={index} className={`${styles['chat-list-item']} ${(chat.id == selectedChat && !chat.gender) ? styles['chat-select'] : ""} ${(chat.gender) ? `${chat.gender}-bg` : ""}`} onClick={() => handleChatSelect(chat.id)}>
+                            <ListItemAvatar>
+                                <Badge
+                                    badgeContent={chat.newMessageCount > 0 ? chat.newMessageCount : null}
+                                    color="error"
+                                    sx={{
+                                        "& .MuiBadge-badge": {
+                                            fontSize: '0.7rem',
+                                            minWidth: '17.6px',
+                                            height: '18px',
+                                            padding: 0,
+                                            top: '4px',
+                                            right: '5px',
+                                            border: '0.1px solid white',
+                                        },
+                                    }}
                                 >
-                                    <IconButton
-                                        size="large"
-                                        aria-label="show more"
-                                        aria-controls={isOpen ? "chat-options-menu" : undefined}
-                                        aria-haspopup="true"
-                                        sx={{
-                                            height: '30px',
-                                            width: '30px',
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            alignItems: 'center'
+                                    <Avatar
+                                        alt={chat.chatName}
+                                        src={chat.avatar}
+                                        style={{
+                                            backgroundColor: chat.chatName ? `hsl(${chat.chatName.charCodeAt(0) * 10 % 360}, 70%, 80%)` : '#ccc',
+                                            color: '#fff'
                                         }}
                                     >
-                                        <MoreIcon style={{ fontSize: "0.8rem" }} />
-                                    </IconButton>
-                                </Dropdown.Toggle>
-
-                                <Dropdown.Menu>
-                                    <Dropdown.Item onClick={(e) => handleAction("report", e, chat.id, chat.friendId)}>
-                                        Report
-                                    </Dropdown.Item>
-                                    <Dropdown.Item onClick={(e) => handleAction("block", e, chat.id, chat.friendId)}>
-                                        Block
-                                    </Dropdown.Item>
-                                    <Dropdown.Item onClick={(e) => handleAction("delete", e, chat.id, chat.friendId)}>
-                                        Delete
-                                    </Dropdown.Item>
-                                </Dropdown.Menu>
-                            </Dropdown>
+                                        {!chat.avatar && chat.chatName ? chat.chatName[0] : null}
+                                    </Avatar>
 
 
-                            {/* Small Modal (Menu)
-                            <Menu
-                                id="chat-options-menu"
-                                anchorEl={anchorEl}
-                                open={isOpen}
-                                onClose={handleMenuClose}
-                                anchorOrigin={{
-                                    vertical: "top",
-                                    horizontal: "right",
-                                }}
-                                transformOrigin={{
-                                    vertical: "top",
-                                    horizontal: "right",
+                                </Badge>
+                            </ListItemAvatar>
+                            <ListItemText
+                                primary={
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                        <span>{chat.chatName}</span>
+                                        {isOnlineChatUsers[chat.friendId] == true &&
+                                            <div
+                                                className="online"
+                                            ></div>
+
+                                        }
+                                    </div>
+                                }
+                                secondary={chat.Last_Message?.content ?? "No messages yet..."}
+                                primaryTypographyProps={{ className: styles['chat-name'] }}
+                                secondaryTypographyProps={{ className: styles['chat-message'] }}
+                            />
+
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'flex-end'
                                 }}
                             >
-                                <MenuItem style={{ fontSize: '0.7rem' }} onClick={(e) => handleAction("report", e, chat.id, chat.friendId)}>Report</MenuItem>
-                                <MenuItem style={{ fontSize: '0.7rem' }} onClick={(e) => handleAction("block", e, chat.id, chat.friendId)}>Block</MenuItem>
-                                <MenuItem style={{ fontSize: '0.7rem' }} onClick={(e) => handleAction("delete", e, chat.id, chat.friendId)}>Delete</MenuItem>
-                            </Menu> */}
+                                {/* More Icon Button */}
+                                {/* <IconButton
+                                    size="large"
+                                    aria-label="show more"
+                                    aria-controls={isOpen ? "chat-options-menu" : undefined}
+                                    aria-haspopup="true"
+                                    onClick={handleMenuOpen}
+                                >
+                                    <MoreIcon style={{ fontSize: "0.8rem" }} />
+                                </IconButton> */}
 
-                            {/* Timestamp */}
-                            <Typography
-                                style={{ fontSize: "0.6rem", color: "grey" }}
-                                className="contactTime"
-                            >
-                                {formatDate(chat.Last_Message?.createdAt)}
-                            </Typography>
-                        </Box>
-                    </ListItem>
+
+                                <Dropdown>
+                                    <Dropdown.Toggle
+                                        // variant="secondary"
+                                        // size="sm"
+                                        // id={`dropdown-${chat.id}`}
+                                        className="options-toggle"
+                                        style={{ border: 'none', background: 'none' }}
+                                    >
+                                        <IconButton
+                                            size="large"
+                                            aria-label="show more"
+                                            aria-controls={isOpen ? "chat-options-menu" : undefined}
+                                            aria-haspopup="true"
+                                            sx={{
+                                                height: '30px',
+                                                width: '30px',
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                                alignItems: 'center'
+                                            }}
+                                        >
+                                            <MoreIcon style={{ fontSize: "0.8rem" }} />
+                                        </IconButton>
+                                    </Dropdown.Toggle>
+
+                                    <Dropdown.Menu>
+                                        <Dropdown.Item onClick={(e) => handleAction("report", e, chat.id, chat.friendId)}>
+                                            Report
+                                        </Dropdown.Item>
+                                        <Dropdown.Item onClick={(e) => handleAction("block", e, chat.id, chat.friendId)}>
+                                            Block
+                                        </Dropdown.Item>
+                                        <Dropdown.Item onClick={(e) => handleAction("delete", e, chat.id, chat.friendId)}>
+                                            Delete
+                                        </Dropdown.Item>
+                                    </Dropdown.Menu>
+                                </Dropdown>
+
+
+                                {/* Small Modal (Menu)
+                                <Menu
+                                    id="chat-options-menu"
+                                    anchorEl={anchorEl}
+                                    open={isOpen}
+                                    onClose={handleMenuClose}
+                                    anchorOrigin={{
+                                        vertical: "top",
+                                        horizontal: "right",
+                                    }}
+                                    transformOrigin={{
+                                        vertical: "top",
+                                        horizontal: "right",
+                                    }}
+                                >
+                                    <MenuItem style={{ fontSize: '0.7rem' }} onClick={(e) => handleAction("report", e, chat.id, chat.friendId)}>Report</MenuItem>
+                                    <MenuItem style={{ fontSize: '0.7rem' }} onClick={(e) => handleAction("block", e, chat.id, chat.friendId)}>Block</MenuItem>
+                                    <MenuItem style={{ fontSize: '0.7rem' }} onClick={(e) => handleAction("delete", e, chat.id, chat.friendId)}>Delete</MenuItem>
+                                </Menu> */}
+
+                                {/* Timestamp */}
+                                <Typography
+                                    style={{ fontSize: "0.6rem", color: "grey" }}
+                                    className="contactTime"
+                                >
+                                    {formatDate(chat.Last_Message?.createdAt)}
+                                </Typography>
+                            </Box>
+                        </ListItem>
+                        <div className="divider"></div>
+                    </>
                 ))}
             </List>
             {(chats && chats.length == 0) &&
@@ -408,11 +422,21 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                                 }}
                             >
                                 {/* Avatar with reduced spacing */}
-                                <Avatar src={nonChat?.avatar} alt={nonChat?.name} sx={{ marginRight: 1, width: 40, height: 40 }} />
+                                <Avatar
+                                    alt={nonChat?.name}
+                                    src={nonChat?.avatar}
+                                    style={{
+                                        backgroundColor: nonChat?.name ? `hsl(${nonChat?.name.charCodeAt(0) * 10 % 360}, 70%, 80%)` : '#ccc',
+                                        color: '#fff'
+                                    }}
+                                >
+                                    {!nonChat?.avatar && nonChat?.name ? nonChat?.name[0] : null}
+                                </Avatar>
+                                {/* <Avatar src={nonChat?.avatar} alt={nonChat?.name} sx={{ marginRight: 1, width: 40, height: 40 }} /> */}
 
 
                                 {/* Friend Name */}
-                                <Box sx={{ flex: 1 }}>
+                                <Box sx={{ flex: 1, ml: "10px" }}>
                                     <ListItemText
                                         primary={nonChat?.name}
                                         primaryTypographyProps={{ sx: { fontWeight: 'bold' } }}
