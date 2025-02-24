@@ -10,13 +10,16 @@ $primary-color: #007bff;
     flex: 1;
 }
 .chat-list{
-    width: calc(var(--chatlist-width));
-    min-width: 325px;
+    // width: calc(var(--chatlist-width));
+    // width: 30%;
+    flex: 1;
+    // min-width: 350px;
     height: calc(100vh - var(--navbar-height));
 }
 .chat-area{
-    // flex: 1;
+    flex: 2;
     height: calc(100vh - var(--navbar-height));
-    width: calc(100vw - var(--chatlist-width));
+    // width: calc(100vw - var(--chatlist-width));
+    width: 70%;
     // border: 2px solid red;
 }

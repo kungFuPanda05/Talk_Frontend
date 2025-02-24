@@ -287,3 +287,21 @@ input {
   width: 95%;
   margin: auto;
 }
+.css-78trlr-MuiButtonBase-root-MuiIconButton-root {
+  @media (max-width: 500px) {
+      padding: 3px;
+  }
+}
+textarea {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  resize: none !important;
+}
+
+/* Material UI ke default focus remove karne ke liye */
+textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: 1px solid rgb(205, 204, 204) !important;
+}

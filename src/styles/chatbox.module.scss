@@ -11,6 +11,10 @@ $primary-color: #007bff;
     // background-color: var(--primary-color);
     // border: 2px solid red;
     background-color: white;
+    @media (max-width: 500px) {
+        padding: 4px;
+        border-radius: 50px;
+    }
 }
 .scroll-container{
     // height: calc(100% - var(--send-message-height));
@@ -34,6 +38,10 @@ $primary-color: #007bff;
     padding-bottom: 5px;
     // background-color: whitesmoke;
     background: linear-gradient(to top right, #f5f5f5, #f3f5f7, rgb(178, 204, 226));
+
+    @media (max-width: 500px) {
+        padding: 10px
+    }
 }
 .message-bar{
     width: fit-content;
@@ -46,6 +54,12 @@ $primary-color: #007bff;
     word-wrap: break-word; /* Legacy property */
     overflow-wrap: break-word; /* Modern equivalent */
     overflow: hidden; /* Prevent content from overflowing */
+
+    @media (max-width: 500px) {
+        font-size: 14px; // Minimum font-size for small screens
+        max-width: 70%;
+        padding: 12px
+    }
 }
 .message-sent{
     align-self: flex-end;

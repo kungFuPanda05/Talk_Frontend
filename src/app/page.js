@@ -17,7 +17,7 @@ import SelectGender from "@/components/SelectGender";
 import { toast } from "react-toastify";
 import { v4 as uuidv4 } from 'uuid';
 import { getSocketInstance } from "@/utils/socket";
-
+import { useMediaQuery } from "react-responsive";
 
 export default function Home() {
 
@@ -45,6 +45,7 @@ export default function Home() {
   const [strangerTypingChatId, setStrangerTypingChatId] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
   const [ratingRange, setRatingRange] = useState([0, 5]); // State for min and max rating
+  const [showChatList, setShowChatList] = useState(true);
 
   const socketRef = useRef();
   const selectedChatRef = useRef(selectedChat);
@@ -55,6 +56,8 @@ export default function Home() {
 
   const token = Cookies.get('token');
   const socket = getSocketInstance();
+
+  const isTablet = useMediaQuery({ maxWidth: 900 });
 
   const fetchUserId = async () => {
     try {
@@ -156,13 +159,20 @@ export default function Home() {
           
           if(selfIdRef.current == message.userId){
             if(message.chatId){
-              setNormalMessageList((prevState) =>
-                prevState.map((prevMessage) =>
+                setNormalMessageList((prevState) => {
+                const messageExists = prevState.some(
+                  (prevMessage) => prevMessage.identityKey === message.identityKey
+                );
+                if (messageExists) {
+                  return prevState.map((prevMessage) =>
                   prevMessage.identityKey === message.identityKey
                     ? { ...prevMessage, createdAt: message.createdAt }
                     : prevMessage
-                )
-              );
+                  );
+                } else {
+                  return [message, ...prevState];
+                }
+                });
               fetchChats();
             }
           }else{
@@ -227,6 +237,7 @@ export default function Home() {
         setDont(false);
       });
       safeEventListener(socket, 'typing-status', (res) => {
+        if(res.userId!=selfId) return;
         setIsStrangerIsTyping(res.isTyping);
         setStrangerTypingChatId(res.chatId);
       });
@@ -301,7 +312,7 @@ export default function Home() {
     if (selectedChat) {
       setMessageContent("");
       setConnecting(false);
-
+      setShowChatList(false);
     }
   }, [selectedChat]);
 
@@ -491,78 +502,83 @@ export default function Home() {
         handleLaterReqStatus={handleLaterReqStatus}
       />
       <div className={`${styles.chat}`}>
-        <div className={`${styles['chat-list']}`}>
-          <ChatList
-            chats={chats}
-            handleChatSelect={handleChatSelect}
-            selectedChat={selectedChat}
-            randomConnect={randomConnect}
-            setConnecting={setConnecting}
-            setSelectedChat={setSelectedChat}
-            dont={dont}
-            fetchChats={fetchChats}
-            handleReqStatus={handleReqStatus}
-            isOnlineUsers={isOnlineUsers}
-            setIsOnlineUsers={setIsOnlineUsers}
-            isOnlineChatUsers={isOnlineChatUsers}
-            setIsOnlineChatUsers={setIsOnlineChatUsers}
-          />
-        </div>
-        <div className={`${styles['chat-area']}`}>
-          {connecting ? (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '100%',
-                flexDirection: 'column',
-                gap: '25px'
-              }}
-            >
-              <CircularProgress />
-              connecting to stranger...
-            </Box>
-          ) : (selectedChat || randomConnect || dont) ? (
-            <ChatBox
-              selfId={selfId}
-              messages={selectedChat ? normalMessageList : randomMessageList}
-              messageContent={messageContent}
-              setMessageContent={setMessageContent}
-              sendMessage={sendMessage}
+        {((isTablet && showChatList) || !isTablet) && 
+          <div className={`${styles['chat-list']}`}>
+            <ChatList
+              chats={chats}
+              handleChatSelect={handleChatSelect}
               selectedChat={selectedChat}
-              setRandomConnect={setRandomConnect}
+              randomConnect={randomConnect}
               setConnecting={setConnecting}
-              isStrangerLeftChat={isStrangerLeftChat}
-              setStrangerLeftChat={setStrangerLeftChat}
-              handleConnectAgain={handleConnectAgain}
-              strangerId={strangerId}
-              isReqSent={isReqSent}
-              isReqRecieved={isReqRecieved}
-              isAccept={isAccept}
-              isReject={isReject}
-              sendFriendRequest={sendFriendRequest}
+              setSelectedChat={setSelectedChat}
+              dont={dont}
+              fetchChats={fetchChats}
               handleReqStatus={handleReqStatus}
-              setNormalMessageList={setNormalMessageList}
-              isStrangerTyping={isStrangerTyping}
-              strangerTypingChatId={strangerTypingChatId}
-              isTyping={isTyping}
-              setIsTyping={setIsTyping}
+              isOnlineUsers={isOnlineUsers}
+              setIsOnlineUsers={setIsOnlineUsers}
+              isOnlineChatUsers={isOnlineChatUsers}
+              setIsOnlineChatUsers={setIsOnlineChatUsers}
             />
-          ) : (
-            <SelectGender
-              setConnecting={setConnecting}
-              selectedGender={selectedGender}
-              setSelectedGender={setSelectedGender}
-              setDont={setDont}
-              profile={profile}
-              ratingRange={ratingRange}
-              setRatingRange={setRatingRange}
-            />
-          )}
+          </div>
+        }
+        {((isTablet && !showChatList) || !isTablet) && 
+          <div className={`${styles['chat-area']}`}>
+            {connecting ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '100%',
+                  flexDirection: 'column',
+                  gap: '25px'
+                }}
+              >
+                <CircularProgress />
+                connecting to stranger...
+              </Box>
+            ) : (selectedChat || randomConnect || dont) ? (
+              <ChatBox
+                selfId={selfId}
+                messages={selectedChat ? normalMessageList : randomMessageList}
+                messageContent={messageContent}
+                setMessageContent={setMessageContent}
+                sendMessage={sendMessage}
+                selectedChat={selectedChat}
+                setRandomConnect={setRandomConnect}
+                setConnecting={setConnecting}
+                isStrangerLeftChat={isStrangerLeftChat}
+                setStrangerLeftChat={setStrangerLeftChat}
+                handleConnectAgain={handleConnectAgain}
+                strangerId={strangerId}
+                isReqSent={isReqSent}
+                isReqRecieved={isReqRecieved}
+                isAccept={isAccept}
+                isReject={isReject}
+                sendFriendRequest={sendFriendRequest}
+                handleReqStatus={handleReqStatus}
+                setNormalMessageList={setNormalMessageList}
+                isStrangerTyping={isStrangerTyping}
+                strangerTypingChatId={strangerTypingChatId}
+                isTyping={isTyping}
+                setIsTyping={setIsTyping}
+                profile={profile}
+              />
+            ) : (
+              <SelectGender
+                setConnecting={setConnecting}
+                selectedGender={selectedGender}
+                setSelectedGender={setSelectedGender}
+                setDont={setDont}
+                profile={profile}
+                ratingRange={ratingRange}
+                setRatingRange={setRatingRange}
+              />
+            )}
 
 
-        </div>
+          </div>
+        }
       </div>
     </div>
   );

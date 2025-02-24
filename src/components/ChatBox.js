@@ -20,9 +20,10 @@ import pending from '../../public/images/pending.png'
 import { debounce, formatDate } from "@/utils/functions";
 import Typing from "./Typing";
 import { getSocketInstance } from "@/utils/socket";
+import { useMediaQuery } from "react-responsive";
 
 
-const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMessage, selectedChat, setRandomConnect, setConnecting, isStrangerLeftChat, handleConnectAgain, strangerId, isReqSent, isReqRecieved, isAccept, isReject, sendFriendRequest, handleReqStatus, setNormalMessageList, isStrangerTyping, strangerTypingChatId, isTyping, setIsTyping}) => {
+const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMessage, selectedChat, setRandomConnect, setConnecting, isStrangerLeftChat, handleConnectAgain, strangerId, isReqSent, isReqRecieved, isAccept, isReject, sendFriendRequest, handleReqStatus, setNormalMessageList, isStrangerTyping, strangerTypingChatId, isTyping, setIsTyping, profile }) => {
     let [limit, setLimit] = useState(100);
     let [page, setPage] = useState(1);
     let [search, setSearch] = useState("");
@@ -34,6 +35,9 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
     const messageEndRef = useRef();
 
     const socket = useMemo(() => getSocketInstance(), []);
+
+    const isMobile = useMediaQuery({ maxWidth: 500 });
+
     const handleRandomChatDisconnect = () => {
         setRandomConnect(false);
         setRandomChatDisconnected(true);
@@ -97,13 +101,13 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
         debouncedSetIsTypingFalse();
     }, [messageContent]);
 
-    useEffect(()=>{
-        socket.emit('typing', {chatId: (selectedChat || 0), isTyping: isTyping});
-    },[isTyping]);
+    useEffect(() => {
+        socket.emit('typing', { chatId: (selectedChat || 0), isTyping: isTyping });
+    }, [isTyping]);
 
-    useEffect(()=>{
+    useEffect(() => {
         console.log("the strangertyping: ", isStrangerTyping, strangerTypingChatId, selectedChat);
-        if(isStrangerTyping && (strangerTypingChatId==selectedChat || !selectedChat)) scrollToBottom();
+        if (isStrangerTyping && (strangerTypingChatId == selectedChat || !selectedChat)) scrollToBottom();
     }, [isStrangerTyping, strangerTypingChatId, selectedChat])
 
     return (
@@ -163,14 +167,14 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                 // }
                 >
                     <div ref={messageEndRef} />
-                    {isStrangerTyping && (strangerTypingChatId==selectedChat || !selectedChat) && <Typing />}
+                    {isStrangerTyping && (strangerTypingChatId == selectedChat || !selectedChat) && <Typing />}
                     {messages.map((message, index) => (
                         <>
-                            {message.createdAt?(
-                                <Typography className={`${selfId === message.userId ? 'flex-ending' : 'flex-starting'}`} variant="body2" align="center" color="textSecondary" style={{marginBottom: '3.5px', marginTop: '1.5px', fontSize: '0.7em'}}>
+                            {message.createdAt ? (
+                                <Typography className={`${selfId === message.userId ? 'flex-ending' : 'flex-starting'}`} variant="body2" align="center" color="textSecondary" style={{ marginBottom: '3.5px', marginTop: '1.5px', fontSize: (isMobile ? '0.55em' : '0.7em') }}>
                                     {formatDate(message.createdAt)}
                                 </Typography>
-                            ): (
+                            ) : (
                                 <div className={`${selfId === message.userId ? 'flex-ending' : 'none'}`} style={{ marginBottom: '3px', marginTop: '1px' }}>
                                     <Image src="/images/pending.png" alt="Pending" width={15} height={17} />
 
@@ -195,7 +199,17 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
 
                     className={`${styles['send-message']}`}>
                     {selectedChat ? (
-                        <Avatar />
+                        // <Avatar />
+                        <Avatar
+                            alt={profile?.name}
+                            src={profile?.avatar}
+                            style={{
+                                backgroundColor: profile?.name ? `hsl(${profile?.name.charCodeAt(0) * 10 % 360}, 70%, 80%)` : '#ccc',
+                                color: '#fff'
+                            }}
+                        >
+                            {!profile?.avatar && profile?.name ? profile?.name[0] : null}
+                        </Avatar>
                     ) : (
                         <RefreshIcon style={{ fontSize: '35px', color: 'grey', cursor: 'pointer' }} onClick={handleRandomChatDisconnect} />
                     )}
@@ -219,16 +233,24 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault(); // Prevents a new line from being added
-                                sendMessage(); // Call the sendMessage function
+                                sendMessage().then(() => {
+                                    console.log("Focusing again");
+                                    
+                                    setTimeout(() => {
+                                        sendMessageInputRef.current?.focus(); // 🔥 Ensure keyboard remains open
+                                    }, 1000); // Small delay to re-focus after React re-renders
+                                });
                             }
                         }}
                     />
                     <IconButton>
                         <AttachFile />
                     </IconButton>
-                    <IconButton>
-                        <InsertEmoticon />
-                    </IconButton>
+                    {!isMobile &&
+                        <IconButton>
+                            <InsertEmoticon />
+                        </IconButton>
+                    }
                     <IconButton onClick={sendMessage}>
                         <Send />
                     </IconButton>
