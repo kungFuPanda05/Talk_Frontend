@@ -237,7 +237,7 @@ export default function Home() {
         setDont(false);
       });
       safeEventListener(socket, 'typing-status', (res) => {
-        if(res.userId!=selfId) return;
+        if(res.userId===selfId) return;
         setIsStrangerIsTyping(res.isTyping);
         setStrangerTypingChatId(res.chatId);
       });
