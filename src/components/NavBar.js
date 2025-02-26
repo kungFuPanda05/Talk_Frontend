@@ -41,6 +41,7 @@ const NavBar = ({ profile, isReqRecieved, isAccept, isReject, setIsOnlineUsers, 
 
   const fetchFriendReq = async () => {
     try {
+      console.log("reached to fetch friend req: ", `${process.env.NEXT_PUBLIC_API_URL}/api/friend/get-friend-requests`);
       let response = await api.get(`${process.env.NEXT_PUBLIC_API_URL}/api/friend/get-friend-requests`);
       setFriendReq(response.data.response);
       let obj = {};
