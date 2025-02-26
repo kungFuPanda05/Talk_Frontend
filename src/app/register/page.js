@@ -55,7 +55,7 @@ const Register = () => {
         <div style={{height: '100%', width: '100%', border: '0.1px solid white', background: 'linear-gradient(to top right,rgb(1, 77, 158),rgb(68, 155, 248),rgb(113, 182, 252))'}}>
             <Box className={styles.registerOuterBox}>
                 <form onSubmit={handleSubmit} className={styles.form}>
-                    <div style={{ textAlign: "center", fontSize: "35px", color: '#007bff', fontWeight: 'bold', textShadow: '1px 1.5px rgb(45, 45, 46)'}}>WeTalk</div>
+                    <div style={{ textAlign: "center", fontSize: "35px", color: '#007bff', fontWeight: 'bold', textShadow: '1px 1.5px rgb(45, 45, 46)'}}>ChitTalk</div>
                     <div className={styles.inputGroup}>
                         <label className={styles.label}>UserName:</label>
                         <input

@@ -96,7 +96,7 @@ const NavBar = ({ profile, isReqRecieved, isAccept, isReject, setIsOnlineUsers, 
               <input placeholder='Search...' />
             </div>
           </div>
-          <div className='primary-font abs-center'>WeTalk</div>
+          <div className='primary-font abs-center'>ChitTalk</div>
           <div className={styles.right}>
             <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
               <IconButton size="large" aria-label="show 4 new mails">

@@ -42,7 +42,7 @@ const Login = () => {
     return (
         <Box className={styles.container}>
             <Box className={styles.loginBox}>
-                <div style={{ textAlign: "center", fontSize: "35px", color: '#007bff', fontWeight: 'bold', textShadow: '1px 1.5px rgb(45, 45, 46)' }}>WeTalk</div>
+                <div style={{ textAlign: "center", fontSize: "35px", color: '#007bff', fontWeight: 'bold', textShadow: '1px 1.5px rgb(45, 45, 46)' }}>ChitTalk</div>
                 <form onSubmit={loginUser} className={styles.form}>
                     {/* Email Field */}
                     <TextField
