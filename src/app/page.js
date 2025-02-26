@@ -414,8 +414,8 @@ export default function Home() {
     if (chatId == 0) return;
     try {
       const response = await api.post(`/api/message/update-new-messages-count`, { chatId, userId });
-      console.log("Reposne: ", response);
-      toast.success(response.data.messages);
+      // console.log("Reposne: ", response);
+      // toast.success(response.data.messages);
     } catch (error) {
       apiError(error);
     }

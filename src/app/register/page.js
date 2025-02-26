@@ -9,8 +9,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Cookies from "js-cookie";
 import styles from "@/styles/register.module.scss";
+import Loader from 'react-fullscreen-loading';
 
 const Register = () => {
+    const [isLoading, setIsLoading] = useState(false);
+
     const router = useRouter();
     const token = Cookies.get("token");
 
@@ -30,6 +33,7 @@ const Register = () => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        setIsLoading(true);
         const formData = new FormData();
         formData.append("name", name);
         formData.append("gender", gender);
@@ -39,6 +43,7 @@ const Register = () => {
 
         try {
             const res = await imageUploadApi.post("/api/auth/register", formData);
+            setIsLoading(false);
             if (res?.data?.success) {
                 toast.success(res.data.message, {
                     position: "top-center",
@@ -47,6 +52,7 @@ const Register = () => {
                 router.push("/login");
             }
         } catch (error) {
+            setIsLoading(false);
             apiError(error);
         }
     };
@@ -126,7 +132,7 @@ const Register = () => {
                     </div>
                 </form>
             </Box>
-
+            {isLoading && <Loader loading  loaderColor="#3498db" />}
         </div>
     );
 };
