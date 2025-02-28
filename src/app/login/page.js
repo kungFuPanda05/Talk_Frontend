@@ -9,7 +9,7 @@ import api from "../../utils/api";
 import apiError from "@/utils/apiError";
 import { toast } from "react-toastify";
 import styles from "../../styles/login.module.scss";
-import Loader from 'react-fullscreen-loading';
+// import Loader from 'react-fullscreen-loading';
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -102,7 +102,7 @@ const Login = () => {
                     </form>
                 </Box>
             </Box>
-            {isLoading && <Loader loading  loaderColor="#3498db" />}
+            {/* {isLoading && <Loader loading  loaderColor="#3498db" />} */}
         </>
     );
 };

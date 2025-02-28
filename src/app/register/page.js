@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Cookies from "js-cookie";
 import styles from "@/styles/register.module.scss";
-import Loader from 'react-fullscreen-loading';
+// import Loader from 'react-fullscreen-loading';
 
 const Register = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -132,7 +132,7 @@ const Register = () => {
                     </div>
                 </form>
             </Box>
-            {isLoading && <Loader loading  loaderColor="#3498db" />}
+            {/* {isLoading && <Loader loading  loaderColor="#3498db" />} */}
         </div>
     );
 };
