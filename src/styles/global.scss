@@ -4,7 +4,7 @@ $primary-color: #007bff;
 :root {
   --primary-color: #007bff;
   --secondary-color: #2ecc71;
-  --navbar-height: 60px;
+  --navbar-height: 70px;
   --send-message-height: 80px;
   --chatbox-padding: 20px;
   --chatlist-width: 33%;
@@ -304,4 +304,15 @@ textarea:focus {
   outline: none !important;
   box-shadow: none !important;
   border: 1px solid rgb(205, 204, 204) !important;
+}
+
+.icon-points{
+  color: white;
+  background-color: blue;
+  width: 30px;
+  text-align: center;
+  border-radius: 50px;
+  margin-top: 15px;
+  font-size: 11px;
+  // margin-bottom: -50px;
 }
