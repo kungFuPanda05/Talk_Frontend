@@ -17,13 +17,15 @@ import ListItemText from '@mui/material/ListItemText';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
-import { Avatar } from '@mui/material';
+import { Avatar, Tooltip } from '@mui/material';
 import api from '@/utils/api';
 import apiError from '@/utils/apiError';
 import { toast } from 'react-toastify';
 import NoDataFound from './NoDataFound';
 import SideDrawer from './SideDrawer';
 import ProfileModal from './ProfileModal';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { eraseCookie } from '@/utils/cookieFunctions';
 
 const NavBar = ({ profile, isReqRecieved, isAccept, isReject, setIsOnlineUsers, isOnlineUsers, handleLaterReqStatus }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -116,6 +118,19 @@ const NavBar = ({ profile, isReqRecieved, isAccept, isReject, setIsOnlineUsers, 
               <IconButton onClick={() => setProfileOpen(true)} size="large" edge="end" aria-label="account of current user">
                 <AccountCircle style={{ color: 'white' }} />
               </IconButton>
+              <Tooltip title="Logout" arrow>
+                <IconButton
+                  onClick={() => {
+                    eraseCookie('token');
+                    window.location.href = '/login';
+                  }}
+                  size="large"
+                  edge="end"
+                  aria-label="logout"
+                >
+                  <LogoutIcon style={{ color: "white" }} />
+                </IconButton>
+              </Tooltip>
             </Box>
             <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
               <IconButton size="large" aria-label="show more">
