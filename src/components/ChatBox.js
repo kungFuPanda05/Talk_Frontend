@@ -204,7 +204,7 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                             alt={profile?.name}
                             src={profile?.avatar}
                             style={{
-                                backgroundColor: profile?.name ? `hsl(${profile?.name.charCodeAt(0) * 10 % 360}, 70%, 80%)` : '#ccc',
+                                backgroundColor: profile?.name ? `hsl(${profile?.name.charCodeAt(0) * 10 % 360}, 70%, 60%)` : '#ccc',
                                 color: '#fff'
                             }}
                         >

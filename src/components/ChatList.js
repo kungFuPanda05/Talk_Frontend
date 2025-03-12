@@ -249,7 +249,7 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                                         alt={chat.chatName}
                                         src={chat.avatar}
                                         style={{
-                                            backgroundColor: chat.chatName ? `hsl(${chat.chatName.charCodeAt(0) * 10 % 360}, 70%, 80%)` : '#ccc',
+                                            backgroundColor: chat.chatName ? `hsl(${chat.chatName.charCodeAt(0) * 10 % 360}, 70%, 60%)` : '#ccc',
                                             color: '#fff'
                                         }}
                                     >
@@ -426,7 +426,7 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                                     alt={nonChat?.name}
                                     src={nonChat?.avatar}
                                     style={{
-                                        backgroundColor: nonChat?.name ? `hsl(${nonChat?.name.charCodeAt(0) * 10 % 360}, 70%, 80%)` : '#ccc',
+                                        backgroundColor: nonChat?.name ? `hsl(${nonChat?.name.charCodeAt(0) * 10 % 360}, 70%, 60%)` : '#ccc',
                                         color: '#fff'
                                     }}
                                 >
