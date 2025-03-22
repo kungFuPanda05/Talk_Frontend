@@ -5,6 +5,7 @@ import {
     Box, Modal, Typography, Button, Avatar, IconButton, Divider, Stack, Rating,
 } from '@mui/material';
 import { AccessTime, Star, Chat } from '@mui/icons-material';
+import ImageAvatar from './ImageAvatar';
 
 export default function ProfileModal({ profile, profileOpen, setProfileOpen }) {
     // const [profileOpen, setProfileOpen] = useState(false);
@@ -41,14 +42,14 @@ export default function ProfileModal({ profile, profileOpen, setProfileOpen }) {
                     </Stack>
 
                     <Stack direction="row" spacing={2} alignItems="center" mb={3}>
-                        <Avatar
+                        <ImageAvatar
                             alt="Profile Pic"
                             src={process.env.NEXT_PUBLIC_API_URL + "/"+ profile?.pic}
                             sx={{
-                                width: 70,
-                                height: 70,
-                                border: '3px solid black',
+                                width: 60,
+                                height: 60,
                             }}
+                            fallback={profile?.name && profile.name && profile.name[0]}
                         />
                         <Box>
                             <Stack direction="row" alignItems="center">

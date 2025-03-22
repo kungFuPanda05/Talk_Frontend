@@ -21,6 +21,9 @@ import { debounce, formatDate } from "@/utils/functions";
 import Typing from "./Typing";
 import { getSocketInstance } from "@/utils/socket";
 import { useMediaQuery } from "react-responsive";
+import EmojiPickerDemo from "./EmojiPicker";
+import EmojiPicker from 'emoji-picker-react';
+import { memo } from 'react';
 
 
 const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMessage, selectedChat, setRandomConnect, setConnecting, isStrangerLeftChat, handleConnectAgain, strangerId, isReqSent, isReqRecieved, isAccept, isReject, sendFriendRequest, handleReqStatus, setNormalMessageList, isStrangerTyping, strangerTypingChatId, isTyping, setIsTyping, profile }) => {
@@ -30,6 +33,7 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
 
     const [hasMore, setHasMore] = useState(true);
     const [isRandomChatDisconnected, setRandomChatDisconnected] = useState(false);
+    const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
 
     const sendMessageInputRef = useRef();
     const messageEndRef = useRef();
@@ -81,6 +85,7 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
             setNormalMessageList([]);
             fetchMessages(selectedChat, "", 100, 1);
         }
+        setIsEmojiPickerOpen(false);
     }, [selectedChat]);
 
     useEffect(() => {
@@ -93,6 +98,17 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
         }, 500),
         [] // Ensure debounce function is created only once
     );
+
+    const MemoizedEmojiPicker = memo(({ isOpen, onEmojiClick }) => (
+        isOpen ?
+            <EmojiPicker
+                style={{ position: 'absolute', bottom: '90px', right: '20px' }}
+                autoFocusSearch={false}
+                open={isOpen}
+                onEmojiClick={onEmojiClick}
+            />
+            : null
+    ));
 
     useEffect(() => {
         if (messageContent && !isTyping) {
@@ -233,9 +249,10 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault(); // Prevents a new line from being added
+                                setIsEmojiPickerOpen(false);
                                 sendMessage().then(() => {
                                     console.log("Focusing again");
-                                    
+
                                     setTimeout(() => {
                                         sendMessageInputRef.current?.focus(); // 🔥 Ensure keyboard remains open
                                     }, 1000); // Small delay to re-focus after React re-renders
@@ -247,15 +264,26 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                         <AttachFile />
                     </IconButton>
                     {!isMobile &&
-                        <IconButton>
+                        <IconButton onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}>
                             <InsertEmoticon />
                         </IconButton>
                     }
-                    <IconButton onClick={sendMessage}>
+                    <IconButton onClick={()=>{setIsEmojiPickerOpen(false); sendMessage()}}>
                         <Send />
                     </IconButton>
-
+                    <EmojiPickerDemo 
+                        message={messageContent}
+                        setMessage={setMessageContent}
+                        isModalOpen={isEmojiPickerOpen}
+                        setIsModalOpen={setIsEmojiPickerOpen}
+                    ></EmojiPickerDemo>
+                    {/* <EmojiPicker style={{ position: 'absolute', bottom: '90px', right: '20px' }} autoFocusSearch={true} open={isEmojiPickerOpen} onEmojiClick={(emojiObj) => setMessageContent(prevState => prevState + emojiObj.emoji)} /> */}
+                    {/* <MemoizedEmojiPicker
+                        isOpen={isEmojiPickerOpen}
+                        onEmojiClick={(emojiObj) => setMessageContent(prev => prev + emojiObj.emoji)}
+                    /> */}
                 </Box>
+                
             )}
 
         </div>
