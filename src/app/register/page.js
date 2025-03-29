@@ -112,7 +112,7 @@ const Register = () => {
                         <label className={styles.label}>Display picture:</label>
                         <input
                             type="file"
-                            accept="image/*"
+                            accept="image/jpeg, image/png"
                             onChange={handleFileChange}
                             className={styles.fileInput}
                         />

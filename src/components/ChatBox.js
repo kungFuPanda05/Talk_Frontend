@@ -24,6 +24,8 @@ import { useMediaQuery } from "react-responsive";
 import EmojiPickerDemo from "./EmojiPicker";
 import EmojiPicker from 'emoji-picker-react';
 import { memo } from 'react';
+import imageUploadApi from "@/utils/imagUploadApi";
+import { v4 as uuidv4 } from 'uuid';
 
 
 const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMessage, selectedChat, setRandomConnect, setConnecting, isStrangerLeftChat, handleConnectAgain, strangerId, isReqSent, isReqRecieved, isAccept, isReject, sendFriendRequest, handleReqStatus, setNormalMessageList, isStrangerTyping, strangerTypingChatId, isTyping, setIsTyping, profile }) => {
@@ -34,9 +36,12 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
     const [hasMore, setHasMore] = useState(true);
     const [isRandomChatDisconnected, setRandomChatDisconnected] = useState(false);
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
+    const [file, setFile] = useState(null);
+    const [filePreview, setFilePreview] = useState(null);
 
     const sendMessageInputRef = useRef();
     const messageEndRef = useRef();
+    const fileInputRef = useRef(null);
 
     const socket = useMemo(() => getSocketInstance(), []);
 
@@ -75,23 +80,6 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
     const scrollToBottom = () => {
         messageEndRef.current?.scrollIntoView();
     };
-
-    useEffect(() => {
-        sendMessageInputRef.current?.focus();
-        setPage(1);
-        setLimit(10);
-        setSearch("");
-        if (selectedChat >= 1) {
-            setNormalMessageList([]);
-            fetchMessages(selectedChat, "", 100, 1);
-        }
-        setIsEmojiPickerOpen(false);
-    }, [selectedChat]);
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
-
     const debouncedSetIsTypingFalse = useCallback(
         debounce(() => {
             setIsTyping(false);
@@ -109,6 +97,61 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
             />
             : null
     ));
+
+    const handleFileChange = (event) => {
+        setFile(event.target.files[0]);
+        const selectedFile = event.target.files[0];
+        if (selectedFile) {
+            const previewUrl = URL.createObjectURL(selectedFile);
+            setFilePreview(previewUrl);
+        }
+    };
+    const sendImage = async () => {
+        try {
+            if (!file) {
+                toast.error("Please select an image to send");
+                return;
+            }
+            if (selectedChat == 0) {
+                const reader = new FileReader();
+                reader.readAsArrayBuffer(file); // Read image as ArrayBuffer
+                reader.onload = () => {
+                    sendMessage({ buffer: reader.result, type: file.type }, "image");
+                    // socket.emit("message", { messageContent: { buffer: reader.result, type: file.type }, chatId: selectedChat, identityKey, type: "image" });
+                };
+            } else {
+                const formData = new FormData();
+                formData.append("sendImage", file);
+                const identityKey = uuidv4();
+                setNormalMessageList((prevState) => [{ identityKey, userId: selfId, createdAt: null, content: "Photo", chatId: selectedChat, type: "image" }, ...prevState]);
+                const response = await imageUploadApi.post(`/api/message/send-image/${selectedChat}`, formData, {
+                    params: { identityKey }
+                });
+            }
+            setFile(null);
+            setFilePreview(null);
+            // toast.success(response.data.message);
+        } catch (error) {
+            apiError(error);
+        }
+    }
+
+    useEffect(() => {
+        sendMessageInputRef.current?.focus();
+        setPage(1);
+        setLimit(10);
+        setSearch("");
+        if (selectedChat >= 1) {
+            setNormalMessageList([]);
+            fetchMessages(selectedChat, "", 100, 1);
+        }
+        setIsEmojiPickerOpen(false);
+    }, [selectedChat]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
 
     useEffect(() => {
         if (messageContent && !isTyping) {
@@ -174,7 +217,8 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                     }
                     style={{
                         display: 'flex',
-                        flexDirection: 'column-reverse'
+                        flexDirection: 'column-reverse',
+                        justifyContent: 'flex-start',
                     }}
                 // endMessage={
                 //     <Typography variant="body2" align="center" color="textSecondary" mt={2}>
@@ -196,9 +240,28 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
 
                                 </div>
                             )}
-                            <div key={index} className={`${styles['message-bar']} ${selfId === message.userId ? styles['message-sent'] : ''}`}>
-                                {message.content}
-                            </div>
+                            {message.type === "image" ? (
+                                (message.createdAt ? (
+                                    <div key={index} className={`${styles['chat-image']} ${selfId === message.userId ? styles['image-sent'] : ''}`}>
+                                        {/* <Image style={{borderRadius: 'inherit' }} src={process.env.NEXT_PUBLIC_API_URL + "/"+ message.content} alt="Unable to load the image" width={250} height={250}></Image> */}
+                                        <Image
+                                            // style={{ borderRadius: 'inherit' }}
+                                            src={(selectedChat == 0) ? message.content : `${process.env.NEXT_PUBLIC_API_URL}/${message.content}`}
+                                            alt="Unable to load the image"
+                                            layout="intrinsic" // This will maintain the aspect ratio
+                                            width={250} // Max width
+                                            height={250} // Auto height based on aspect ratio
+                                        />
+                                    </div>) : (
+                                    <div key={index} className={`${styles['message-bar']} ${selfId === message.userId ? styles['message-sent'] : ''}`}>
+                                        Sending Image...
+                                    </div>
+                                ))
+                            ) : (
+                                <div key={index} className={`${styles['message-bar']} ${selfId === message.userId ? styles['message-sent'] : ''}`}>
+                                    {message.content}
+                                </div>
+                            )}
                         </>
 
                     ))}
@@ -250,6 +313,7 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                             if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault(); // Prevents a new line from being added
                                 setIsEmojiPickerOpen(false);
+                                if (file) sendImage();
                                 sendMessage().then(() => {
                                     console.log("Focusing again");
 
@@ -260,18 +324,28 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                             }
                         }}
                     />
-                    <IconButton>
+                    <IconButton onClick={() => fileInputRef.current && fileInputRef.current.click()}>
                         <AttachFile />
                     </IconButton>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg, image/png"
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                    />
+                    {file &&
+                        <img src={filePreview} style={{ width: '50px', height: '50px' }} onClick={() => { setFile(null); setFilePreview(null) }} />
+                    }
                     {!isMobile &&
                         <IconButton onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}>
                             <InsertEmoticon />
                         </IconButton>
                     }
-                    <IconButton onClick={()=>{setIsEmojiPickerOpen(false); sendMessage()}}>
+                    <IconButton onClick={() => { setIsEmojiPickerOpen(false); if (file) sendImage(); sendMessage() }}>
                         <Send />
                     </IconButton>
-                    <EmojiPickerDemo 
+                    <EmojiPickerDemo
                         message={messageContent}
                         setMessage={setMessageContent}
                         isModalOpen={isEmojiPickerOpen}
@@ -283,7 +357,7 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
                         onEmojiClick={(emojiObj) => setMessageContent(prev => prev + emojiObj.emoji)}
                     /> */}
                 </Box>
-                
+
             )}
 
         </div>

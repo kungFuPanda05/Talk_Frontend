@@ -93,10 +93,10 @@ const NavBar = ({ profile, isReqRecieved, isAccept, isReject, setIsOnlineUsers, 
             <IconButton size="large" edge="start" aria-label="open drawer">
               <MenuIcon className='menu-icon' style={{ color: 'white', fontSize: '30px' }} />
             </IconButton>
-            <div className='search nav-search'>
+            {/* <div className='search nav-search'>
               <SearchIcon className='search-icon' />
               <input placeholder='Search...' />
-            </div>
+            </div> */}
           </div>
           <div className='primary-font abs-center'>ChitTalk</div>
           <div className={styles.right}>

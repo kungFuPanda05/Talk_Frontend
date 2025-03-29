@@ -134,15 +134,29 @@ export default function Home() {
       safeEventListener(socket, 'message', (message) => {
         console.log("The message received is: ", message);
         console.log("The message.chatId: ", message.chatId, " selectedChatRef.current: ", selectedChatRef.current);
-  
+        if(message.type=="image"){
+          if(message.chatId==0){
+            const blob = new Blob([message.content.buffer], { type: message.content.type }); // Adjust type if needed
+            message.content = URL.createObjectURL(blob);
+            console.log("the final image content url: ", message.content);
+          }
+        }
         if (message.chatId == 0){
           if(selfIdRef.current == message.userId){
-            setRandomMessageList((prevState) =>
-              prevState.map((prevMessage) =>
-                prevMessage.identityKey === message.identityKey
-                  ? { ...prevMessage, createdAt: message.createdAt }
-                  : prevMessage
-              )
+            setRandomMessageList((prevState) => {
+              const messageExists = prevState.some(
+                (prevMessage) => prevMessage.identityKey === message.identityKey
+              );
+              if(messageExists){
+                return prevState.map((prevMessage) => {
+                return prevMessage.identityKey === message.identityKey
+                  ? { ...prevMessage, content: message.content, createdAt: message.createdAt }
+                  : prevMessage;
+                })
+              }else{
+                return [message, ...prevState];
+              }
+            }
             );
           }else{
             setRandomMessageList((prevState) => [message, ...prevState]);
@@ -166,7 +180,7 @@ export default function Home() {
                 if (messageExists) {
                   return prevState.map((prevMessage) =>
                   prevMessage.identityKey === message.identityKey
-                    ? { ...prevMessage, createdAt: message.createdAt }
+                    ? { ...prevMessage, content: message.content, createdAt: message.createdAt }
                     : prevMessage
                   );
                 } else {
@@ -339,19 +353,18 @@ export default function Home() {
   }, [randomUserIds, selfId]);
 
 
-  const sendMessage = async () => {
-    if (!messageContent || !(selectedChat || selectedChat==0)) return;
-    let content = messageContent;
+  const sendMessage = async (content=messageContent, type="text") => {
+    if (!content || !(selectedChat || selectedChat==0)) return;
     setIsTyping(false);
     setMessageContent("");
     const identityKey = uuidv4();
-    socket.emit("message", { messageContent: content, chatId: selectedChat, identityKey });
+    socket.emit("message", { messageContent: content, chatId: selectedChat, identityKey, type });
     if (selectedChat) {
-      setNormalMessageList((prevState) => [{ identityKey, userId: selfId, createdAt: null, content: content, chatId: selectedChat }, ...prevState]);
-      // await createMessage(content, identityKey);
+      setNormalMessageList((prevState) => [{ identityKey, userId: selfId, createdAt: null, content: content, chatId: selectedChat, type }, ...prevState]);
+    // await createMessage(content, identityKey);
       // fetchChats();
     }else{
-      setRandomMessageList((prevState) => [{ identityKey, userId: selfId, createdAt: null, content: content, chatId: selectedChat }, ...prevState]);
+      setRandomMessageList((prevState) => [{ identityKey, userId: selfId, createdAt: null, content: content, chatId: selectedChat, type }, ...prevState]);
     }
   };
 
@@ -396,8 +409,9 @@ export default function Home() {
         ...matchingChat,
         Last_Message: {
           ...matchingChat.Last_Message,
-          content: message.content,
+          content: (message?.type=="image")?"Photo":message.content,
           sentBy: message.userId, // Updating sentBy as well
+          type: message.type,
         },
         newMessageCount: matchingChat.newMessageCount + (increaseMessageCount ? 1 : 0),
       };

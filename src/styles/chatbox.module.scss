@@ -68,3 +68,24 @@ $primary-color: #007bff;
     background-color: var(--primary-color);
     color: white;
 }
+.chat-image{
+    background: none;
+    margin-top: 50px;
+    // border: 1px solid rgb(140, 140, 140);
+    width: fit-content;
+    border-radius: 20px !important;
+    // padding: 2px;
+    // background-color: white;
+    box-shadow: 2px 2px 8px 2px grey;
+    // border: 5px solid rgb(162, 189, 239);
+    border: 5px solid rgb(162, 189, 239);
+    // border: 5px solid #E0E0E0;
+    margin-bottom: 10px;
+    overflow: hidden;
+    background-color: rgb(162, 189, 239);
+}
+.image-sent{
+    align-self: flex-end;
+    border: 5px solid white;
+    background-color: white !important;
+}
