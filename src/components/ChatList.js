@@ -144,10 +144,6 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
             });
             setIsOnlineUsers(obj);
             setNonChatList(response.data.users);
-            toast.success(response.data.message, {
-                position: 'top-center',
-                hideProgressBar: false
-            });
         } catch (error) {
             apiError(error);
         }

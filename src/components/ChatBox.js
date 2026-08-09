@@ -28,7 +28,32 @@ import imageUploadApi from "@/utils/imagUploadApi";
 import { v4 as uuidv4 } from 'uuid';
 
 
-const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMessage, selectedChat, setRandomConnect, setConnecting, isStrangerLeftChat, handleConnectAgain, strangerId, isReqSent, isReqRecieved, isAccept, isReject, sendFriendRequest, handleReqStatus, setNormalMessageList, isStrangerTyping, strangerTypingChatId, isTyping, setIsTyping, profile }) => {
+const ChatBox = ({
+    selfId,
+    messages,
+    setMessageContent,
+    messageContent,
+    sendMessage,
+    selectedChat,
+    setRandomConnect,
+    setConnecting,
+    isStrangerLeftChat,
+    handleConnectAgain,
+    strangerId,
+    isReqSent,
+    isReqRecieved,
+    isAccept,
+    isReject,
+    isFriend,
+    sendFriendRequest,
+    handleReqStatus,
+    setNormalMessageList,
+    isStrangerTyping,
+    strangerTypingChatId,
+    isTyping,
+    setIsTyping,
+    profile
+}) => {
     let [limit, setLimit] = useState(100);
     let [page, setPage] = useState(1);
     let [search, setSearch] = useState("");
@@ -171,7 +196,7 @@ const ChatBox = ({ selfId, messages, setMessageContent, messageContent, sendMess
 
     return (
         <div className={styles.container}>
-            {!selectedChat && !isReqSent && !isReqRecieved && !isAccept && !isReject &&
+            {!selectedChat && !isReqSent && !isReqRecieved && !isAccept && !isFriend &&
                 <Button variant="contained" color="primary"
                     style={{
                         position: 'absolute',

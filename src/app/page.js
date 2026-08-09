@@ -38,6 +38,7 @@ export default function Home() {
   const [isReqRecieved, setReqReceived] = useState(false);
   const [isAccept, setIsAccept] = useState(false);
   const [isReject, setIsReject] = useState(false);
+  const [isFriend, setIsFriend] = useState(false);
   const [isOnlineUsers, setIsOnlineUsers] = useState({});
   const [isOnlineChatUsers, setIsOnlineChatUsers] = useState({});
   const [profile, setProfile] = useState({});
@@ -491,6 +492,7 @@ export default function Home() {
       setIsReject(response.data.response.isReject);
       setIsAccept(response.data.response.isAccept);
       setReqReceived(response.data.response.isReqRecieved);
+      setIsFriend(response.data.response.isFriend);
     } catch (error) {
       apiError(error);
     }
@@ -569,6 +571,7 @@ export default function Home() {
                 isReqRecieved={isReqRecieved}
                 isAccept={isAccept}
                 isReject={isReject}
+                isFriend={isFriend}
                 sendFriendRequest={sendFriendRequest}
                 handleReqStatus={handleReqStatus}
                 setNormalMessageList={setNormalMessageList}
