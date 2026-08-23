@@ -1,15 +1,25 @@
 import Axios from "axios";
 import Cookies from "js-cookie";
-
-const url = process.env.NEXT_PUBLIC_API_URL
+import { API_BASE_URL } from "@/utils/config";
 
 const api = Axios.create({
-    baseURL : `${url}`,
+    baseURL : API_BASE_URL,
     headers:{
         'Accept' : 'application/json',
         'Content-Type' : "application/json"
     }
 });
 
-api.defaults.headers.common['Authorization'] = `Bearer ${Cookies.get('token')}`;
+api.interceptors.request.use((config) => {
+    const token = Cookies.get('token');
+
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    } else {
+        delete config.headers.Authorization;
+    }
+
+    return config;
+});
+
 export default api;

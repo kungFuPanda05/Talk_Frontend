@@ -2,11 +2,11 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Box,
+  Button,
   CircularProgress,
+  IconButton,
 } from "@mui/material";
-import Cookies from "js-cookie";
-import io from 'socket.io-client'
+import { ArrowBackRounded } from "@mui/icons-material";
 import api from "@/utils/api";
 import apiError from "@/utils/apiError";
 import NavBar from "@/components/NavBar";
@@ -17,12 +17,12 @@ import SelectGender from "@/components/SelectGender";
 import { toast } from "react-toastify";
 import { v4 as uuidv4 } from 'uuid';
 import { getSocketInstance } from "@/utils/socket";
-import { useMediaQuery } from "react-responsive";
 
 export default function Home() {
 
   const [randomConnect, setRandomConnect] = useState(false);
   const [selectedGender, setSelectedGender] = useState('M');
+  const [strangerGender, setStrangerGender] = useState("");
   const [normalMessageList, setNormalMessageList] = useState([]);
   const [randomMessageList, setRandomMessageList] = useState([]);
   const [selfId, setSelfId] = useState("");
@@ -47,18 +47,36 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState(false);
   const [ratingRange, setRatingRange] = useState([0, 5]); // State for min and max rating
   const [showChatList, setShowChatList] = useState(true);
+  const [isTablet, setIsTablet] = useState(false);
 
-  const socketRef = useRef();
   const selectedChatRef = useRef(selectedChat);
   const selfIdRef = useRef(selfId);
   const isOnlineUsersRef = useRef(isOnlineUsers);
   const isOnlineChatUsersRef = useRef(isOnlineChatUsers);
   const chatListRef = useRef(chats);
+  const connectingRef = useRef(connecting);
+  const selectedGenderRef = useRef(selectedGender);
 
-  const token = Cookies.get('token');
   const socket = getSocketInstance();
 
-  const isTablet = useMediaQuery({ maxWidth: 900 });
+  useEffect(() => {
+    // The server and first client render both use the desktop tree. Applying
+    // the media query after mount avoids react-responsive hydrating with a
+    // different branch tree, while still reacting to orientation changes.
+    const tabletQuery = window.matchMedia('(max-width: 900px)');
+    const updateLayout = () => setIsTablet(tabletQuery.matches || window.innerWidth <= 900);
+
+    updateLayout();
+    const layoutFrame = window.requestAnimationFrame(updateLayout);
+    tabletQuery.addEventListener('change', updateLayout);
+    window.addEventListener('resize', updateLayout);
+
+    return () => {
+      window.cancelAnimationFrame(layoutFrame);
+      tabletQuery.removeEventListener('change', updateLayout);
+      window.removeEventListener('resize', updateLayout);
+    };
+  }, []);
 
   const fetchUserId = async () => {
     try {
@@ -210,7 +228,15 @@ export default function Home() {
       });
   
       safeEventListener(socket, 'strangers-connected', (response) => {
-        if (response.success) {
+        // A late socket response can arrive just after the user cancels a
+        // search. Ignore it so the preference screen is not replaced by a
+        // conversation the user no longer asked for.
+        if (response.success && connectingRef.current) {
+          const matchedStranger = selfIdRef.current
+            ? response.users.find((user) => String(user.id) !== String(selfIdRef.current))
+            : response.users[1] || response.users[0];
+
+          setStrangerGender(matchedStranger?.gender || selectedGenderRef.current);
           setRandomConnect(true);
           setConnecting(false);
           setRandomUserIds(response.users.map(user => user.id));
@@ -288,6 +314,10 @@ export default function Home() {
   }, [chats]);
 
   useEffect(() => {
+    selectedGenderRef.current = selectedGender;
+  }, [selectedGender]);
+
+  useEffect(() => {
     if (!randomConnect) {
       setChats(chats.slice(1));
       socket.emit('leave-room');
@@ -304,7 +334,7 @@ export default function Home() {
           createdAt: new Date()
         },
         newMessageCount: 0,
-        gender: selectedGender
+        gender: strangerGender || selectedGender
       }, ...chats]);
       setSelectedChat(0);
       setStrangerLeftChat(false);
@@ -312,6 +342,7 @@ export default function Home() {
   }, [randomConnect]);
 
   useEffect(() => {
+    connectingRef.current = connecting;
     console.log("connecting to stranger: ", connecting);
     if (connecting) {
       setStrangerId("");
@@ -324,7 +355,7 @@ export default function Home() {
 
   useEffect(() => {
     selectedChatRef.current = selectedChat;
-    if (selectedChat) {
+    if (selectedChat !== "" && selectedChat !== null && selectedChat !== undefined) {
       setMessageContent("");
       setConnecting(false);
       setShowChatList(false);
@@ -390,12 +421,54 @@ export default function Home() {
   const handleChatSelect = (chatId) => {
     // if (chatId >= 1) fetchMessages(chatId);
     setSelectedChat(chatId);
+    if (isTablet) setShowChatList(false);
     setChats((prevState) => {
       return prevState.map((chat) =>
         chat.id === chatId ? { ...chat, newMessageCount: 0 } : chat
       );
     });
   }
+
+  const handleStartNewConnection = (chatId) => {
+    setSelectedChat(chatId);
+
+    // ChatList uses an empty selection to open the matching flow. On mobile,
+    // the list and matching pane are mutually exclusive, so switch panes as
+    // part of the same user action instead of waiting for a chat selection.
+    if (chatId === "" || chatId === null || chatId === undefined) {
+      setShowChatList(false);
+    }
+  }
+
+  const resetMatchSearch = (returnToList = false) => {
+    connectingRef.current = false;
+    if (socket?.connected) socket.emit('leave-room');
+
+    setConnecting(false);
+    setRandomConnect(false);
+    setDont(false);
+    setSelectedChat("");
+    setMessageContent("");
+    setRandomMessageList([]);
+    setRandomUserIds([]);
+    setStrangerId("");
+    setStrangerGender("");
+    setStrangerLeftChat(false);
+    setShowChatList(returnToList);
+  }
+
+  const handleMatchingBack = () => {
+    if (connecting) {
+      resetMatchSearch(true);
+      return;
+    }
+
+    setShowChatList(true);
+  }
+
+  useEffect(() => {
+    if (connecting && isTablet) setShowChatList(false);
+  }, [connecting, isTablet]);
 
   const handleMessageNotifications = (message, increaseMessageCount = true) => {
     setChats((prevList) => {
@@ -526,7 +599,7 @@ export default function Home() {
               selectedChat={selectedChat}
               randomConnect={randomConnect}
               setConnecting={setConnecting}
-              setSelectedChat={setSelectedChat}
+              setSelectedChat={handleStartNewConnection}
               dont={dont}
               fetchChats={fetchChats}
               handleReqStatus={handleReqStatus}
@@ -539,59 +612,79 @@ export default function Home() {
         }
         {((isTablet && !showChatList) || !isTablet) && 
           <div className={`${styles['chat-area']}`}>
-            {connecting ? (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  height: '100%',
-                  flexDirection: 'column',
-                  gap: '25px'
-                }}
-              >
-                <CircularProgress />
-                connecting to stranger...
-              </Box>
-            ) : (selectedChat || randomConnect || dont) ? (
-              <ChatBox
-                selfId={selfId}
-                messages={selectedChat ? normalMessageList : randomMessageList}
-                messageContent={messageContent}
-                setMessageContent={setMessageContent}
-                sendMessage={sendMessage}
-                selectedChat={selectedChat}
-                setRandomConnect={setRandomConnect}
-                setConnecting={setConnecting}
-                isStrangerLeftChat={isStrangerLeftChat}
-                setStrangerLeftChat={setStrangerLeftChat}
-                handleConnectAgain={handleConnectAgain}
-                strangerId={strangerId}
-                isReqSent={isReqSent}
-                isReqRecieved={isReqRecieved}
-                isAccept={isAccept}
-                isReject={isReject}
-                isFriend={isFriend}
-                sendFriendRequest={sendFriendRequest}
-                handleReqStatus={handleReqStatus}
-                setNormalMessageList={setNormalMessageList}
-                isStrangerTyping={isStrangerTyping}
-                strangerTypingChatId={strangerTypingChatId}
-                isTyping={isTyping}
-                setIsTyping={setIsTyping}
-                profile={profile}
-              />
-            ) : (
-              <SelectGender
-                setConnecting={setConnecting}
-                selectedGender={selectedGender}
-                setSelectedGender={setSelectedGender}
-                setDont={setDont}
-                profile={profile}
-                ratingRange={ratingRange}
-                setRatingRange={setRatingRange}
-              />
+            {isTablet && !randomConnect && (selectedChat === "" || selectedChat === null || selectedChat === undefined) && (
+              <div className={styles['mobile-pane-nav']}>
+                <IconButton
+                  className={styles['mobile-back-button']}
+                  aria-label="Back to conversations"
+                  onClick={handleMatchingBack}
+                >
+                  <ArrowBackRounded />
+                </IconButton>
+                <span>New connection</span>
+              </div>
             )}
+            <div className={styles['chat-pane-content']}>
+              {connecting ? (
+                <div className={styles.connecting}>
+                  <div className={styles['loader-shell']}>
+                    <CircularProgress size={48} thickness={4.5} sx={{ color: 'var(--clay-primary)' }} />
+                  </div>
+                  <div className={styles['connecting-copy']}>
+                    <strong>Finding your next conversation</strong>
+                    <span>Matching your preferences with someone who is ready to chat.</span>
+                  </div>
+                  <Button
+                    className={styles['cancel-search']}
+                    variant="outlined"
+                    startIcon={<ArrowBackRounded />}
+                    onClick={() => resetMatchSearch(false)}
+                  >
+                    Adjust preferences
+                  </Button>
+                </div>
+              ) : (selectedChat || randomConnect || dont) ? (
+                <ChatBox
+                  selfId={selfId}
+                  messages={selectedChat ? normalMessageList : randomMessageList}
+                  messageContent={messageContent}
+                  setMessageContent={setMessageContent}
+                  sendMessage={sendMessage}
+                  selectedChat={selectedChat}
+                  setRandomConnect={setRandomConnect}
+                  setConnecting={setConnecting}
+                  isStrangerLeftChat={isStrangerLeftChat}
+                  setStrangerLeftChat={setStrangerLeftChat}
+                  handleConnectAgain={handleConnectAgain}
+                  strangerId={strangerId}
+                  isReqSent={isReqSent}
+                  isReqRecieved={isReqRecieved}
+                  isAccept={isAccept}
+                  isReject={isReject}
+                  isFriend={isFriend}
+                  sendFriendRequest={sendFriendRequest}
+                  handleReqStatus={handleReqStatus}
+                  setNormalMessageList={setNormalMessageList}
+                  isStrangerTyping={isStrangerTyping}
+                  strangerTypingChatId={strangerTypingChatId}
+                  isTyping={isTyping}
+                  setIsTyping={setIsTyping}
+                  profile={profile}
+                  activeChat={chats.find((chat) => chat.id == selectedChat)}
+                  onBack={() => setShowChatList(true)}
+                />
+              ) : (
+                <SelectGender
+                  setConnecting={setConnecting}
+                  selectedGender={selectedGender}
+                  setSelectedGender={setSelectedGender}
+                  setDont={setDont}
+                  profile={profile}
+                  ratingRange={ratingRange}
+                  setRatingRange={setRatingRange}
+                />
+              )}
+            </div>
 
 
           </div>

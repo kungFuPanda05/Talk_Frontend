@@ -1,8 +1,12 @@
-const { default: NavBar } = require("@/components/NavBar")
+import { redirect } from 'next/navigation';
 
-const NavBarNew = () => {
-    return (
-        <NavBar/>
-    )
+export const metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
+export default function LegacyNavbarRoute() {
+  redirect('/');
 }
-export default NavBarNew;

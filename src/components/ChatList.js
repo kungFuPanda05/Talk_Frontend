@@ -23,7 +23,7 @@ import {
     DialogContent,
     DialogTitle,
 } from "@mui/material";
-import { Search } from "@mui/icons-material";
+import { AutoAwesomeRounded, ChatBubbleRounded, SearchRounded } from "@mui/icons-material";
 import styles from '../styles/chatlist.module.scss'
 import NoDataFound from "./NoDataFound";
 import MoreIcon from '@mui/icons-material/MoreVert';
@@ -32,13 +32,39 @@ import apiError from "@/utils/apiError";
 import api from "@/utils/api";
 import SideDrawer from "./SideDrawer";
 import { formatDate } from "@/utils/functions";
-import Dropdown from "react-bootstrap/Dropdown";
+
+const getStrangerGenderTone = (gender) => {
+    const normalizedGender = String(gender ?? "").trim().toUpperCase();
+
+    if (["M", "MALE", "MAN"].includes(normalizedGender)) {
+        return {
+            rowClass: "gender-male",
+            pillClass: "gender-pill-male",
+            label: "Male match",
+        };
+    }
+
+    if (["F", "FEMALE", "WOMAN"].includes(normalizedGender)) {
+        return {
+            rowClass: "gender-female",
+            pillClass: "gender-pill-female",
+            label: "Female match",
+        };
+    }
+
+    return {
+        rowClass: "gender-neutral",
+        pillClass: "gender-pill-neutral",
+        label: "Surprise match",
+    };
+};
 
 const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setConnecting, setSelectedChat, dont, fetchChats, handleReqStatus, isOnlineUsers, setIsOnlineUsers, isOnlineChatUsers, setIsOnlineChatUsers }) => {
     let [limit, setLimit] = useState(10);
     let [page, setPage] = useState(1);
     let [search, setSearch] = useState("");
     const [anchorEl, setAnchorEl] = useState(null);
+    const [anchorChatId, setAnchorChatId] = useState(null);
     const [anchorElChats, setAnchorElChats] = useState(null);
     const [anchorElUsersStatus, setAnchorElUsersStatus] = useState(null);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -52,14 +78,16 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
     const isOpen = Boolean(anchorEl);
 
 
-    const handleMenuOpen = (event) => {
+    const handleMenuOpen = (event, chatId) => {
         event.stopPropagation();
         setAnchorEl(event.currentTarget);
+        setAnchorChatId(chatId);
     };
 
     const handleMenuClose = (event) => {
-        event.stopPropagation();
+        event?.stopPropagation?.();
         setAnchorEl(null);
+        setAnchorChatId(null);
     };
 
     const handleChatsMenuOpen = (event) => {
@@ -174,19 +202,22 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
     return (
         <div className={`${styles.container}`}>
             <div className={styles['chat-list-header']}>
-                <div style={{ display: "flex", justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '25px', fontWeight: 'bold', padding: '10px', paddingLeft: '20px' }}>Chats</div>
+                <div className={styles['header-row']}>
+                    <div className={styles['header-title']}>
+                        <span className={styles['header-icon']} aria-hidden="true"><ChatBubbleRounded /></span>
+                        <span>
+                            <strong>Conversations</strong>
+                            <small>{chats?.length || 0} {chats?.length === 1 ? 'chat' : 'chats'} in your circle</small>
+                        </span>
+                    </div>
                     <IconButton
-                        size="large"
-                        aria-label="show more"
+                        className={styles['header-menu']}
+                        aria-label="Conversation list options"
                         aria-controls={isOpen ? "chat-options-menu" : undefined}
                         aria-haspopup="true"
                         onClick={handleChatsMenuOpen}
-                        sx={{
-                            height: '100%',
-                        }}
                     >
-                        <MoreIcon style={{ fontSize: "1rem" }} />
+                        <MoreIcon />
                     </IconButton>
                     <Menu
                         id="chat-options-menu"
@@ -202,30 +233,48 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                             horizontal: "right",
                         }}
                     >
-                        <MenuItem style={{ fontSize: '0.7rem' }} onClick={handleBlockedUsersDrawer}>Blocked Users</MenuItem>
-                        <MenuItem style={{ fontSize: '0.7rem' }} onClick={handleRejectedReqDrawer}>Rejected Requests</MenuItem>
+                        <MenuItem onClick={handleBlockedUsersDrawer}>Blocked users</MenuItem>
+                        <MenuItem onClick={handleRejectedReqDrawer}>Rejected requests</MenuItem>
                     </Menu>
                 </div>
                 <Paper component="form" className={styles.search}>
+                    <SearchRounded className={styles['search-leading-icon']} aria-hidden="true" />
                     <InputBase
                         className={styles['search-bar']}
-                        placeholder="Search"
+                        placeholder="Search conversations"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        inputProps={{ "aria-label": "search" }}
+                        inputProps={{ "aria-label": "Search conversations" }}
                     />
-                    <IconButton className={styles['search-icon']} aria-label="search">
-                        <Search />
-                    </IconButton>
                 </Paper>
             </div>
 
             {/* Chat List */}
-            <List>
-                {chats?.map((chat, index) => (
-                    <>
-                        <ListItem key={index} className={`${styles['chat-list-item']} ${(chat.id == selectedChat && !chat.gender) ? styles['chat-select'] : ""} ${(chat.gender) ? `${chat.gender}-bg` : ""}`} onClick={() => handleChatSelect(chat.id)}>
-                            <ListItemAvatar>
+            <List className={styles['chat-items']}>
+                {chats?.map((chat, index) => {
+                    const isSelected = chat.id == selectedChat;
+                    const isStrangerChat = chat.id == 0 || (
+                        String(chat.chatName ?? "").trim().toLowerCase() === "stranger" && Boolean(chat.gender)
+                    );
+                    const genderTone = isStrangerChat ? getStrangerGenderTone(chat.gender) : null;
+
+                    return (
+                    <div key={chat.id ?? index} className={styles['chat-row-wrap']}>
+                        <ListItem
+                            className={`${styles['chat-list-item']} ${isSelected ? styles['chat-select'] : ""} ${genderTone ? styles[genderTone.rowClass] : ""}`}
+                            onClick={() => handleChatSelect(chat.id)}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault();
+                                    handleChatSelect(chat.id);
+                                }
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Open conversation with ${chat.chatName || 'stranger'}${genderTone ? `, ${genderTone.label}` : ''}`}
+                            aria-pressed={isSelected}
+                        >
+                            <ListItemAvatar className={styles['avatar-slot']}>
                                 <Badge
                                     badgeContent={chat.newMessageCount > 0 ? chat.newMessageCount : null}
                                     color="error"
@@ -242,6 +291,7 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                                     }}
                                 >
                                     <Avatar
+                                        className={styles.avatar}
                                         alt={chat.chatName}
                                         src={chat.avatar}
                                         style={{
@@ -257,12 +307,18 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                             </ListItemAvatar>
                             <ListItemText
                                 primary={
-                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <div className={styles['chat-identity']}>
                                         <span>{chat.chatName}</span>
+                                        {genderTone && (
+                                            <span
+                                                className={`${styles['gender-pill']} ${styles[genderTone.pillClass]}`}
+                                                title={`${genderTone.label} — gender preference for this connection`}
+                                            >
+                                                {genderTone.label}
+                                            </span>
+                                        )}
                                         {isOnlineChatUsers[chat.friendId] == true &&
-                                            <div
-                                                className="online"
-                                            ></div>
+                                            <span className={styles['online-indicator']} title="Online" aria-label="Online"></span>
 
                                         }
                                     </div>
@@ -273,11 +329,7 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                             />
 
                             <Box
-                                sx={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'flex-end'
-                                }}
+                                className={styles['chat-trailing']}
                             >
                                 {/* More Icon Button */}
                                 {/* <IconButton
@@ -291,43 +343,29 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                                 </IconButton> */}
 
 
-                                <Dropdown>
-                                    <Dropdown.Toggle
-                                        // variant="secondary"
-                                        // size="sm"
-                                        // id={`dropdown-${chat.id}`}
-                                        className="options-toggle"
-                                        style={{ border: 'none', background: 'none' }}
-                                    >
-                                        <IconButton
-                                            size="large"
-                                            aria-label="show more"
-                                            aria-controls={isOpen ? "chat-options-menu" : undefined}
-                                            aria-haspopup="true"
-                                            sx={{
-                                                height: '30px',
-                                                width: '30px',
-                                                display: 'flex',
-                                                justifyContent: 'center',
-                                                alignItems: 'center'
-                                            }}
-                                        >
-                                            <MoreIcon style={{ fontSize: "0.8rem" }} />
-                                        </IconButton>
-                                    </Dropdown.Toggle>
-
-                                    <Dropdown.Menu>
-                                        <Dropdown.Item onClick={(e) => handleAction("report", e, chat.id, chat.friendId)}>
-                                            Report
-                                        </Dropdown.Item>
-                                        <Dropdown.Item onClick={(e) => handleAction("block", e, chat.id, chat.friendId)}>
-                                            Block
-                                        </Dropdown.Item>
-                                        <Dropdown.Item onClick={(e) => handleAction("delete", e, chat.id, chat.friendId)}>
-                                            Delete
-                                        </Dropdown.Item>
-                                    </Dropdown.Menu>
-                                </Dropdown>
+                                <IconButton
+                                    className={styles['row-menu']}
+                                    aria-label={`More options for ${chat.chatName || 'conversation'}`}
+                                    aria-controls={anchorChatId === chat.id ? `chat-options-${chat.id}` : undefined}
+                                    aria-haspopup="true"
+                                    aria-expanded={anchorChatId === chat.id && Boolean(anchorEl)}
+                                    onClick={(event) => handleMenuOpen(event, chat.id)}
+                                >
+                                    <MoreIcon />
+                                </IconButton>
+                                <Menu
+                                    id={`chat-options-${chat.id}`}
+                                    anchorEl={anchorChatId === chat.id ? anchorEl : null}
+                                    open={anchorChatId === chat.id && Boolean(anchorEl)}
+                                    onClose={handleMenuClose}
+                                    onClick={(event) => event.stopPropagation()}
+                                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                    transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                                >
+                                    <MenuItem onClick={(event) => handleAction("report", event, chat.id, chat.friendId)}>Report</MenuItem>
+                                    <MenuItem onClick={(event) => handleAction("block", event, chat.id, chat.friendId)}>Block</MenuItem>
+                                    <MenuItem onClick={(event) => handleAction("delete", event, chat.id, chat.friendId)}>Delete</MenuItem>
+                                </Menu>
 
 
                                 {/* Small Modal (Menu)
@@ -352,30 +390,40 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
 
                                 {/* Timestamp */}
                                 <Typography
-                                    style={{ fontSize: "0.6rem", color: "grey" }}
-                                    className="contactTime"
+                                    className={styles['contact-time']}
                                 >
                                     {formatDate(chat.Last_Message?.createdAt)}
                                 </Typography>
                             </Box>
                         </ListItem>
-                        <div className="divider"></div>
-                    </>
-                ))}
+                    </div>
+                    );
+                })}
             </List>
             {(chats && chats.length == 0) &&
-                <NoDataFound heading={"No Chat found"} text={"Please add strangers as friend to see chat list"}>
-                    <Button style={{ fontSize: '10px' }} variant="contained" color="primary" onClick={() => {
+                <NoDataFound heading={"Your chat circle is quiet"} text={"Meet someone new and their conversation will appear here."}>
+                    <Button className={styles['empty-action']} startIcon={<AutoAwesomeRounded />} variant="contained" color="primary" onClick={() => {
                         setSelectedChat("");
                         setConnecting(true);
-                    }}>Connect Stranger</Button>
+                    }}>Meet someone new</Button>
                 </NoDataFound>
             }
-            {(!randomConnect && selectedChat) ?
-                <Button style={{ position: "absolute", bottom: '20px', right: '20px', fontSize: '10px' }} variant="contained" color="secondary" onClick={() => {
-                    setSelectedChat("");
-                    if (dont) setConnecting(true);
-                }}>Connect Stranger</Button> : ""
+            {(!randomConnect && selectedChat) &&
+                <div className={styles['connect-footer']}>
+                    <Button
+                        type="button"
+                        className={styles['connect-action']}
+                        startIcon={<AutoAwesomeRounded />}
+                        variant="contained"
+                        color="secondary"
+                        onClick={() => {
+                            setSelectedChat("");
+                            if (dont) setConnecting(true);
+                        }}
+                    >
+                        New connection
+                    </Button>
+                </div>
             }
 
             {/* Report Modal */}
@@ -408,14 +456,7 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
                         {nonChatList.map((nonChat) => (
                             <ListItem
                                 key={nonChat.id}
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: 1,
-                                    borderRadius: 3,
-                                    backgroundColor: '#f5f5f5',
-                                    marginTop: '10px'
-                                }}
+                                className={styles['drawer-user']}
                             >
                                 {/* Avatar with reduced spacing */}
                                 <Avatar
@@ -432,21 +473,14 @@ const ChatList = ({ chats, handleChatSelect, selectedChat, randomConnect, setCon
 
 
                                 {/* Friend Name */}
-                                <Box sx={{ flex: 1, ml: "10px" }}>
+                                <Box className={styles['drawer-user-copy']}>
                                     <ListItemText
                                         primary={nonChat?.name}
-                                        primaryTypographyProps={{ sx: { fontWeight: 'bold' } }}
+                                        primaryTypographyProps={{ className: styles['drawer-user-name'] }}
 
                                     />
-                                    <Typography
-                                        sx={{
-                                            fontSize: '0.6rem', // Smaller font size
-                                            color: 'gray', // Greyish color
-                                            fontWeight: 250, // Light font weight
-                                            marginBottom: 1,
-                                        }}
-                                    >
-                                        <div style={{ width: '6px', height: '6px', backgroundColor: isOnlineUsers[nonChat.id] ? "green" : 'red', borderRadius: '50%', display: 'inline-block', marginRight: '3px', marginBottom: '0.4px' }}></div>{isOnlineUsers[nonChat.id] ? "Online" : "Offline"}
+                                    <Typography className={styles['drawer-status']}>
+                                        <span className={isOnlineUsers[nonChat.id] ? styles['status-online'] : styles['status-offline']} aria-hidden="true"></span>{isOnlineUsers[nonChat.id] ? "Online" : "Offline"}
                                     </Typography>
                                 </Box>
 

@@ -1,41 +1,29 @@
 import React from 'react';
-import { Box, Typography, Button } from '@mui/material';
-import Image from 'next/image';
-import Link from 'next/link';
+import { Box, Typography } from '@mui/material';
+import { AutoAwesomeRounded, SearchRounded } from '@mui/icons-material';
+import styles from '../styles/navbar.module.scss';
 
-const NoDataFound = ({heading, text, children}) => {
+const NoDataFound = ({ heading, text, children }) => {
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="flex-start"
-      textAlign="center"
-      paddingX="20px"
-      height={'100%'}
-    >
-      {/* Image Section */}
-      <Box marginBottom={1}>
-        <Image
-          src="https://staticmania.cdn.prismic.io/staticmania/a8befbc0-90ae-4835-bf37-8cd1096f450f_Property+1%3DSearch_+Property+2%3DSm.svg"
-          alt="404"
-          width={300}
-          height={150}
-        />
-      </Box>
+    <Box className={styles.emptyState} role="status">
+      <div className={styles.emptyIllustration} aria-hidden="true">
+        <span className={`${styles.emptyBlob} ${styles.emptyBlobOne}`} />
+        <span className={`${styles.emptyBlob} ${styles.emptyBlobTwo}`} />
+        <span className={styles.emptyIconShell}>
+          <SearchRounded />
+        </span>
+        <AutoAwesomeRounded className={styles.sparkleOne} />
+        <AutoAwesomeRounded className={styles.sparkleTwo} />
+      </div>
 
-      {/* Title */}
-      <Typography variant="h5" fontWeight="bold" marginBottom={1}>
+      <Typography className={styles.emptyTitle} component="h3">
         {heading}
       </Typography>
-
-      {/* Description */}
-      <Typography variant="body1" color="textSecondary" marginBottom={3}>
+      <Typography className={styles.emptyText} component="p">
         {text}
       </Typography>
 
-      {/* Button */}
-      {children}
+      {children && <div className={styles.emptyActions}>{children}</div>}
     </Box>
   );
 };

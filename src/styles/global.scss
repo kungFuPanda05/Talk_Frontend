@@ -1,16 +1,48 @@
-$primary-color: #007bff;
+$primary-color: #7567e8;
 
-// global.scss
 :root {
-  --primary-color: #007bff;
-  --secondary-color: #2ecc71;
-  --navbar-height: 70px;
-  --send-message-height: 80px;
-  --chatbox-padding: 20px;
-  --chatlist-width: 33%;
+  --clay-page: #e9ecfb;
+  --clay-page-deep: #dfe5f7;
+  --clay-surface: #f0f2ff;
+  --clay-surface-high: #f8f9ff;
+  --clay-surface-low: #dfe4f5;
+  --clay-ink: #24304f;
+  --clay-muted: #7280a7;
+  --clay-subtle: #98a3c0;
+  --clay-primary: #7567e8;
+  --clay-primary-deep: #6255d6;
+  --clay-primary-soft: #dedaff;
+  --clay-secondary: #55c9b5;
+  --clay-coral: #ff7f98;
+  --clay-gold: #f3b35c;
+  --clay-danger: #d85d72;
+  --clay-outline: rgba(78, 91, 138, 0.14);
+  --clay-shadow: 12px 12px 24px rgba(80, 88, 145, 0.18),
+    -10px -10px 22px rgba(255, 255, 255, 0.82),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.8),
+    inset -2px -2px 5px rgba(92, 101, 165, 0.08);
+  --clay-shadow-soft: 7px 7px 16px rgba(80, 88, 145, 0.16),
+    -7px -7px 16px rgba(255, 255, 255, 0.78),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.72);
+  --clay-shadow-small: 4px 4px 10px rgba(80, 88, 145, 0.15),
+    -4px -4px 10px rgba(255, 255, 255, 0.72);
+  --clay-inset: inset 5px 5px 10px rgba(80, 88, 145, 0.16),
+    inset -5px -5px 10px rgba(255, 255, 255, 0.72);
+  --clay-pressed: inset 3px 3px 7px rgba(80, 88, 145, 0.18),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.7);
+  --clay-highlight: linear-gradient(145deg, rgba(255, 255, 255, 0.68), rgba(224, 228, 248, 0.56));
+  --clay-radius-shell: 30px;
+  --clay-radius-panel: 25px;
+  --clay-radius-card: 20px;
+  --clay-radius-control: 16px;
+  --navbar-height: 78px;
+  --send-message-height: 82px;
+  --chatbox-padding: 18px;
+  --chatlist-width: clamp(310px, 31vw, 390px);
   --primary-padding: 20px;
+  --motion-fast: 170ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  color-scheme: light;
 }
-
 
 * {
   margin: 0;
@@ -18,102 +50,82 @@ $primary-color: #007bff;
   box-sizing: border-box !important;
 }
 
-.black {
-  border: 2px solid black !important;
-}
-
-.red {
-  border: 2px solid red !important;
-}
-
-.green {
-  border: 2px solid green !important;
-}
-
-.grey {
-  border: 2px solid grey !important;
-}
-
-.blue {
-  border: 2px solid blue !important;
-}
-
-.pink {
-  border: 2px solid pink !important;
+html {
+  min-height: 100%;
+  background: var(--clay-page);
 }
 
 body {
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-  // border: 2px solid black;
-  // background-color: $primary-color !important;
-  // background: linear-gradient(to top right, #0056b3, #3595fc, #66b2ff);
-  // z-index: -1;
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
+  color: var(--clay-ink);
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255, 185, 211, 0.34), transparent 27%),
+    radial-gradient(circle at 88% 8%, rgba(142, 194, 255, 0.34), transparent 28%),
+    radial-gradient(circle at 80% 88%, rgba(108, 221, 197, 0.24), transparent 30%),
+    linear-gradient(145deg, #eef1ff 0%, var(--clay-page) 47%, #e5eafa 100%);
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-input {
-  all: unset;
-  background-color: white;
-  height: 100%;
-  border-radius: 6px;
-  padding: 15px;
-  // box-sizing: border-box;
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  width: 230px;
+  height: 230px;
+  border-radius: 42% 58% 63% 37% / 45% 37% 63% 55%;
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: var(--clay-shadow-soft);
+  pointer-events: none;
+}
+
+body::before {
+  top: -100px;
+  left: 18%;
+  transform: rotate(24deg);
+}
+
+body::after {
+  right: -95px;
+  bottom: -110px;
+  transform: rotate(-18deg);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  color: var(--clay-ink);
+  background: var(--clay-primary-soft);
+}
+
+:focus-visible {
+  outline: 3px solid rgba(117, 103, 232, 0.26) !important;
+  outline-offset: 3px;
 }
 
 .primary-background {
-  background-color: $primary-color;
+  background: transparent;
 }
 
 .primary-font {
-  color: white;
-  font-size: 2rem;
-  font-family: cursive;
-  text-shadow: 1px 1px 3px black;
-}
-
-.search {
-  border-radius: 6px;
-  height: 100%;
-  position: relative;
-
-  .search-icon {
-    position: absolute;
-    top: 50%;
-    transform: translatey(-50%);
-    left: 2%;
-  }
-
-  input {
-    padding-left: 35px;
-    width: 100%;
-  }
-
-  box-shadow: 2px 2px 3px 0.1px rgb(49, 102, 167);
-}
-
-@media (max-width: 900px) {
-
-  /* Styles for tablets and mobile devices */
-  .nav-search {
-    display: none;
-  }
-}
-
-@media (max-width: 400px) {
-
-  /* Styles for tablets and mobile devices */
-  .primary-font {
-    font-size: 1.5rem;
-  }
-}
-
-@media (max-width: 300px) {
-
-  /* Styles for tablets and mobile devices */
-  .primary-font {
-    font-size: 1.2rem;
-  }
+  color: var(--clay-ink);
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.045em;
 }
 
 .abs-center {
@@ -123,36 +135,56 @@ input {
   transform: translate(-50%, -50%);
 }
 
+.black,
+.red,
+.green,
+.grey,
+.blue,
+.pink {
+  border-color: transparent !important;
+}
+
+.search {
+  position: relative;
+  height: 100%;
+  border-radius: var(--clay-radius-control);
+
+  input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .search-icon {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+  }
+}
+
 #scrollableChatBox {
-
-  /* For WebKit browsers (Chrome, Safari) */
-  &::-webkit-scrollbar {
-    width: 2px;
-    /* Adjust width as needed */
-  }
-
-  &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    /* Background of the track */
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #888;
-    /* Color of the scrollbar handle */
-    border-radius: 2px;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background: #555;
-    /* Color when hovered */
-  }
-
-  /* For Firefox */
-  scrollbar-width:none;
-  scrollbar-color: #888 #f1f1f1;
-  /* Thumb color, track color */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(117, 103, 232, 0.36) transparent;
   -webkit-overflow-scrolling: touch;
-  /* Smooth scrolling for WebKit browsers */
+}
+
+#scrollableChatBox::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+#scrollableChatBox::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#scrollableChatBox::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(117, 103, 232, 0.33);
+  background-clip: padding-box;
 }
 
 .auto-scroll {
@@ -163,159 +195,268 @@ input {
   height: 100%;
 }
 
-.infinite-scroll-component__outerdiv {
-  width: 100%;
-  // border: 2px solid yellow
-}
-
+.infinite-scroll-component__outerdiv,
 .infinite-scroll-component {
   width: 100%;
   min-height: 100%;
+}
+
+.infinite-scroll-component {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  // border: 2px dotted blue;
 }
 
-// .MuiBadge-badge{
-//   // font-size: 0.7rem;
-//   // min-width: 18px;
-//   // height: 18px;
-//   // padding: 0;
-//   // padding: 0px;
-//   // top: 4px;
-//   // right: 5px;
-//   // border: 0.1px solid white;
-// }
-
-.M-bg {
-  background-color: rgb(201, 232, 250);
-}
-
-.F-bg {
-  background-color: rgb(244, 227, 246);
-}
-
+.M-bg,
+.F-bg,
 .R-bg {
-  background-color: rgb(217, 241, 217);
+  background: transparent;
 }
 
 .disable {
-  cursor: not-allowed;
-  border: none;
-  box-shadow: none;
-  background-color: rgb(203, 202, 202);
+  cursor: not-allowed !important;
+  opacity: 0.58;
+  box-shadow: var(--clay-inset) !important;
+}
+
+.online,
+.offline {
+  width: 9px;
+  height: 9px;
+  margin-left: 7px;
+  border: 2px solid var(--clay-surface-high);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(85, 201, 181, 0.12);
 }
 
 .online {
-  width: 8px; // Circle size
-  height: 8px;
-  border-radius: 50%;
-  background-color: #00ff62; // Green if online, red if offline
-  margin-left: 5px;
-  // box-shadow: 0px 0px 0px 2px #66FF00;
+  background: var(--clay-secondary);
 }
 
 .offline {
-  width: 8px; // Circle size
-  height: 8px;
-  border-radius: 50%;
-  background-color: red; // Green if online, red if offline
-  margin-left: 5px;
+  background: var(--clay-coral);
 }
-.flex-ending{
+
+.flex-ending {
   align-self: flex-end;
 }
-.flex-starting{
-  align-items: flex-start;
+
+.flex-starting {
   align-self: flex-start;
 }
-.none{
+
+.none {
   display: none;
 }
-.options-toggle {
-  background: none;
-  border: none;
-  color: gray;
-}
-.options-toggle:hover {
-  color: black;
-}
-.options-toggle::after {
-  display: none !important; /* Removes the default dropdown caret */
-}
 
-//for typing component
-@keyframes blink {
-  0% {
-    opacity: 0.3;
-  }
-  33% {
-    opacity: 1;
-  }
-  66% {
-    opacity: 0.3;
-  }
-  100% {
-    opacity: 0.3;
-  }
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  margin: 0 4px;
-  background: #555;
-  border-radius: 50%;
-  animation: blink 1.5s infinite;
-}
-
-.dot:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.dot:nth-child(2) {
-  animation-delay: 0.3s;
-}
-
-.dot:nth-child(3) {
-  animation-delay: 0.6s;
-}
-.divider{
+.divider {
+  width: calc(100% - 30px);
   height: 1px;
-  background-color: rgb(200, 199, 199);
-  width: 95%;
-  margin: auto;
+  margin: 3px auto;
+  background: rgba(91, 104, 155, 0.08);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
 }
-.css-78trlr-MuiButtonBase-root-MuiIconButton-root {
-  @media (max-width: 500px) {
-      padding: 3px;
-  }
+
+.icon-points {
+  min-width: 42px;
+  padding: 4px 8px;
+  color: #fff;
+  background: var(--clay-primary);
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  box-shadow: var(--clay-shadow-small);
 }
+
 textarea {
-  outline: none !important;
-  box-shadow: none !important;
-  border: none !important;
   resize: none !important;
 }
 
-/* Material UI ke default focus remove karne ke liye */
-textarea:focus {
-  outline: none !important;
-  box-shadow: none !important;
-  border: 1px solid rgb(205, 204, 204) !important;
+@keyframes blink {
+  0%, 100% { opacity: 0.32; transform: translateY(0); }
+  45% { opacity: 1; transform: translateY(-3px); }
 }
 
-.icon-points{
-  color: white;
-  background-color: blue;
-  width: 30px;
-  text-align: center;
-  border-radius: 50px;
-  margin-top: 15px;
-  font-size: 11px;
-  // margin-bottom: -50px;
+.dot {
+  width: 7px;
+  height: 7px;
+  margin: 0 3px;
+  border-radius: 50%;
+  background: var(--clay-primary);
+  animation: blink 1.25s infinite;
 }
-.picker{
-  border-radius: 100px !important;
+
+.dot:nth-child(2) { animation-delay: 0.18s; }
+.dot:nth-child(3) { animation-delay: 0.36s; }
+
+.MuiButton-root {
+  min-height: 42px;
+  padding: 9px 18px;
+  border-radius: 15px !important;
+  color: var(--clay-ink);
+  font-weight: 750 !important;
+  letter-spacing: -0.01em !important;
+  text-transform: none !important;
+  box-shadow: var(--clay-shadow-small) !important;
+  transition: transform var(--motion-fast), box-shadow var(--motion-fast), filter var(--motion-fast) !important;
+}
+
+.MuiButton-containedPrimary-root {
+  color: #fff !important;
+  background: linear-gradient(145deg, #8275f1, var(--clay-primary-deep)) !important;
+}
+
+.MuiButton-containedSecondary-root {
+  color: #123f37 !important;
+  background: linear-gradient(145deg, #6edbc8, var(--clay-secondary)) !important;
+}
+
+.MuiButton-root:hover:not(:disabled),
+.MuiIconButton-root:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: saturate(1.05);
+}
+
+.MuiButton-root:active:not(:disabled),
+.MuiIconButton-root:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: var(--clay-pressed) !important;
+}
+
+.MuiIconButton-root {
+  min-width: 42px;
+  min-height: 42px;
+  color: var(--clay-muted) !important;
+  border: 1px solid rgba(255, 255, 255, 0.52) !important;
+  background: var(--clay-highlight) !important;
+  box-shadow: var(--clay-shadow-small) !important;
+  transition: transform var(--motion-fast), box-shadow var(--motion-fast), color var(--motion-fast) !important;
+}
+
+.MuiPaper-root,
+.MuiDialog-paper,
+.MuiDrawer-paper {
+  color: var(--clay-ink) !important;
+  border: 1px solid rgba(255, 255, 255, 0.68) !important;
+  background: var(--clay-surface) !important;
+  background-image: none !important;
+  box-shadow: var(--clay-shadow) !important;
+}
+
+.MuiMenu-paper,
+.MuiPopover-paper {
+  padding: 7px;
+  border-radius: 17px !important;
+}
+
+.MuiMenuItem-root {
+  min-height: 40px !important;
+  margin: 2px 0 !important;
+  border-radius: 11px !important;
+  font-size: 0.84rem !important;
+  font-weight: 650 !important;
+}
+
+.MuiMenuItem-root:hover,
+.MuiMenuItem-root.Mui-selected {
+  background: var(--clay-primary-soft) !important;
+}
+
+.MuiDialog-paper {
+  width: min(520px, calc(100vw - 28px));
+  border-radius: 25px !important;
+}
+
+.MuiDialogTitle-root {
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+}
+
+.MuiInputBase-root:not(.MuiInputBase-multiline) {
+  border-radius: 14px !important;
+}
+
+.MuiSlider-root {
+  color: var(--clay-primary) !important;
+}
+
+.MuiSlider-rail {
+  opacity: 1 !important;
+  background: var(--clay-surface-low) !important;
+  box-shadow: var(--clay-inset) !important;
+}
+
+.MuiSlider-thumb {
+  width: 22px !important;
+  height: 22px !important;
+  border: 3px solid var(--clay-surface-high) !important;
+  box-shadow: var(--clay-shadow-small) !important;
+}
+
+.MuiCheckbox-root.Mui-checked {
+  color: var(--clay-primary) !important;
+}
+
+.Toastify__toast {
+  color: var(--clay-ink) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: 18px !important;
+  background: var(--clay-surface) !important;
+  box-shadow: var(--clay-shadow-soft) !important;
+}
+
+.Toastify__progress-bar {
+  background: linear-gradient(90deg, var(--clay-primary), var(--clay-secondary)) !important;
+}
+
+emoji-picker {
+  --background: var(--clay-surface);
+  --border-color: rgba(255, 255, 255, 0.7);
+  --button-active-background: var(--clay-primary-soft);
+  --button-hover-background: rgba(117, 103, 232, 0.1);
+  --category-emoji-padding: 0.65rem;
+  border-radius: 22px !important;
+  box-shadow: var(--clay-shadow) !important;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --navbar-height: 70px;
+    --primary-padding: 14px;
+    --chatbox-padding: 12px;
+  }
+
+  .nav-search { display: none; }
+}
+
+@media (max-width: 520px) {
+  :root {
+    --clay-radius-shell: 22px;
+    --clay-radius-panel: 20px;
+    --clay-radius-card: 17px;
+  }
+
+  body::before,
+  body::after {
+    width: 150px;
+    height: 150px;
+  }
+
+  .primary-font { font-size: 1.35rem; }
+
+  .MuiButton-root {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -1,11 +1,16 @@
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Avatar } from '@mui/material';
 
 const ImageAvatar = ({ alt, src, sx = {}, fallback = 'A' }) => {
     const [hasError, setHasError] = useState(false);
     const width = sx.width || 40;
     const height = sx.height || 40;
+    const fallbackText = String(fallback || 'U').charAt(0).toUpperCase();
+
+    useEffect(() => {
+        setHasError(false);
+    }, [src]);
 
     const containerStyle = {
         width,
@@ -18,28 +23,27 @@ const ImageAvatar = ({ alt, src, sx = {}, fallback = 'A' }) => {
 
     return (
         <div style={containerStyle}>
-            {!hasError ? (
+            {src && !hasError ? (
                 <Image
                     src={src}
                     alt={alt}
                     width={width}
                     height={height}
-                    objectFit="cover"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     onError={() => setHasError(true)}
                 />
             ) : (
                 <Avatar
-                    alt={fallback}
-                    src={src}
+                    alt={alt || fallbackText}
                     style={{
-                        backgroundColor: `hsl(${fallback.charCodeAt(0)* 10 % 360}, 70%, 60%)`,
+                        backgroundColor: `hsl(${fallbackText.charCodeAt(0) * 10 % 360}, 70%, 60%)`,
                         color: '#fff',
                         width: '100%',
                         height: '100%',
                         fontSize: '270%'
                     }}
                 >
-                    {fallback}
+                    {fallbackText}
                 </Avatar>
             )}
         </div>

@@ -1,5 +1,14 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Environment
+
+Copy `.env.example` to `.env.local` for local development. For production, configure these values in the hosting platform instead of committing an env file:
+
+- `NEXT_PUBLIC_API_URL`: the public `https://` URL of the backend (without a trailing slash)
+- `NEXT_PUBLIC_APP_URL`: the public `https://` URL of this frontend (without a trailing slash)
+
+Do not set `NODE_ENV`; Next.js sets it appropriately for development and production commands.
+
 ## Getting Started
 
 First, run the development server:

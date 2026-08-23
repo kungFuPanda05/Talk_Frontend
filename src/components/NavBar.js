@@ -1,231 +1,328 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import styles from '../styles/navbar.module.scss';
-import SearchIcon from '@mui/icons-material/Search';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
-import Box from '@mui/material/Box';
-import Badge from '@mui/material/Badge';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import MailIcon from '@mui/icons-material/Mail';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import MoreIcon from '@mui/icons-material/MoreVert';
-import Drawer from '@mui/material/Drawer';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import Typography from '@mui/material/Typography';
-import { Avatar, Tooltip } from '@mui/material';
+
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  Avatar,
+  Badge,
+  Box,
+  Button,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import {
+  AccountCircleRounded,
+  ChatBubbleRounded,
+  CheckRounded,
+  CloseRounded,
+  LogoutRounded,
+  MenuRounded,
+  MoreVertRounded,
+  NotificationsRounded,
+} from '@mui/icons-material';
 import api from '@/utils/api';
 import apiError from '@/utils/apiError';
-import { toast } from 'react-toastify';
-import NoDataFound from './NoDataFound';
-import SideDrawer from './SideDrawer';
-import ProfileModal from './ProfileModal';
-import LogoutIcon from '@mui/icons-material/Logout';
 import { eraseCookie } from '@/utils/cookieFunctions';
+import NoDataFound from './NoDataFound';
+import ProfileModal from './ProfileModal';
+import SideDrawer from './SideDrawer';
+import styles from '../styles/navbar.module.scss';
+import { apiAssetUrl } from '@/utils/config';
 
-const NavBar = ({ profile, isReqRecieved, isAccept, isReject, setIsOnlineUsers, isOnlineUsers, handleLaterReqStatus }) => {
+const NavBar = ({
+  profile,
+  isReqRecieved,
+  isAccept,
+  isReject,
+  setIsOnlineUsers,
+  isOnlineUsers,
+  handleLaterReqStatus,
+}) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [friendReq, setFriendReq] = useState([]);
   const [profileOpen, setProfileOpen] = useState(false);
   const [friendReqCount, setFriendReqCount] = useState(0);
+  const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
+  const [pendingRequest, setPendingRequest] = useState(null);
 
+  const mobileMenuOpen = Boolean(mobileMenuAnchor);
+  const profileImage = profile?.pic
+    ? apiAssetUrl(profile.pic)
+    : undefined;
 
-  const toggleDrawer = (open) => (event) => {
-    if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
-      return;
-    }
-    setIsDrawerOpen(open);
-  };
-
-  const fetchFriendReq = async () => {
+  const fetchFriendReq = useCallback(async () => {
     try {
-      console.log("reached to fetch friend req: ", `${process.env.NEXT_PUBLIC_API_URL}/api/friend/get-friend-requests`);
-      let response = await api.get(`${process.env.NEXT_PUBLIC_API_URL}/api/friend/get-friend-requests`);
-      setFriendReq(response.data.response);
-      let obj = {};
-      response.data.response.map(user => {
-        user = user.SentRequests;
-        if (user.Online > 0) obj[user.id] = 1;
-        else obj[user.id] = 0;
+      const response = await api.get('/api/friend/get-friend-requests');
+      const requests = Array.isArray(response.data.response) ? response.data.response : [];
+      const onlineUsers = {};
+
+      requests.forEach((request) => {
+        const user = request.SentRequests;
+        if (user?.id) onlineUsers[user.id] = user.Online > 0 ? 1 : 0;
       });
-      setIsOnlineUsers(obj);
-    } catch (error) {
-      apiError(error);
-    }
-  }
-  // const handleLaterReqStatus = async (status, strangerId) => {
-  //   try {
-  //     let response = await api.post('/api/friend/set-status', { status, strangerId });
-  //     toast.success(response.data.messages);
-  //     fetchFriendReq();
-  //   } catch (error) {
-  //     apiError(error);
-  //   }
 
-  // }
-  const fetchFriendReqCount = async () => {
-    try {
-      let response = await api.get(`${process.env.NEXT_PUBLIC_API_URL}/api/friend/get-friend-requests-count`);
-      setFriendReqCount(response.data.count);
+      setFriendReq(requests);
+      if (typeof setIsOnlineUsers === 'function') setIsOnlineUsers(onlineUsers);
     } catch (error) {
       apiError(error);
     }
-  }
+  }, [setIsOnlineUsers]);
+
+  const fetchFriendReqCount = useCallback(async () => {
+    try {
+      const response = await api.get('/api/friend/get-friend-requests-count');
+      setFriendReqCount(Number(response.data.count) || 0);
+    } catch (error) {
+      apiError(error);
+    }
+  }, []);
 
   useEffect(() => {
     fetchFriendReqCount();
-  }, [isReqRecieved, isAccept, isReject,])
+  }, [fetchFriendReqCount, isReqRecieved, isAccept, isReject]);
 
   useEffect(() => {
     if (isDrawerOpen) fetchFriendReq();
-  }, [isDrawerOpen])
+  }, [fetchFriendReq, isDrawerOpen]);
 
+  const openRequests = () => {
+    setMobileMenuAnchor(null);
+    setIsDrawerOpen(true);
+  };
+
+  const openProfile = () => {
+    setMobileMenuAnchor(null);
+    setProfileOpen(true);
+  };
+
+  const logout = () => {
+    eraseCookie('token');
+    window.location.href = '/login';
+  };
+
+  const handleRequestAction = async (status, userId) => {
+    if (typeof handleLaterReqStatus !== 'function') return;
+
+    const requestKey = `${status}-${userId}`;
+    setPendingRequest(requestKey);
+    try {
+      await handleLaterReqStatus(status, userId);
+      await Promise.all([fetchFriendReq(), fetchFriendReqCount()]);
+    } finally {
+      setPendingRequest(null);
+    }
+  };
 
   return (
     <>
-      <div className={`${styles.navbar} primary-background`}>
-        <div className={`${styles.innernavbar}`}>
+      <header className={styles.navbar}>
+        <div className={styles.navGlow} aria-hidden="true" />
+        <div className={styles.innernavbar}>
           <div className={styles.left}>
-            <IconButton size="large" edge="start" aria-label="open drawer">
-              <MenuIcon className='menu-icon' style={{ color: 'white', fontSize: '30px' }} />
-            </IconButton>
-            {/* <div className='search nav-search'>
-              <SearchIcon className='search-icon' />
-              <input placeholder='Search...' />
-            </div> */}
-          </div>
-          <div className='primary-font abs-center'>ChitTalk</div>
-          <div className={styles.right}>
-            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-              <IconButton size="large" aria-label="show 4 new mails">
-                <Badge badgeContent={4} color="error">
-                  <MailIcon style={{ color: 'white' }} />
-                </Badge>
-              </IconButton>
+            <Tooltip title="Friend requests" arrow>
               <IconButton
-                size="large"
-                aria-label="show notifications"
-                onClick={toggleDrawer(true)}
+                className={styles.navIconButton}
+                onClick={openRequests}
+                aria-label={`Open friend requests${friendReqCount ? `, ${friendReqCount} new` : ''}`}
+                aria-controls={isDrawerOpen ? 'friend-requests-drawer' : undefined}
+                aria-expanded={isDrawerOpen}
               >
-                <Badge badgeContent={friendReqCount > 0 ? friendReqCount : null} color="error">
-                  <NotificationsIcon style={{ color: 'white' }} />
+                <Badge
+                  badgeContent={friendReqCount || null}
+                  max={9}
+                  classes={{ badge: styles.mobileBadge }}
+                >
+                  <MenuRounded />
                 </Badge>
               </IconButton>
-              <IconButton onClick={() => setProfileOpen(true)} size="large" edge="end" aria-label="account of current user">
-                <AccountCircle style={{ color: 'white' }} />
-              </IconButton>
-              <Tooltip title="Logout" arrow>
+            </Tooltip>
+          </div>
+
+          <div className={styles.brand} aria-label="ChitTalk home">
+            <span className={styles.brandIcon} aria-hidden="true">
+              <ChatBubbleRounded />
+            </span>
+            <span className={styles.brandCopy}>
+              <span className={styles.brandName}>ChitTalk</span>
+              <span className={styles.brandTagline}>Connect · Chat · Belong</span>
+            </span>
+          </div>
+
+          <div className={styles.right}>
+            <Box className={styles.desktopActions}>
+              <Tooltip title="Friend requests" arrow>
                 <IconButton
-                  onClick={() => {
-                    eraseCookie('token');
-                    window.location.href = '/login';
-                  }}
-                  size="large"
-                  edge="end"
-                  aria-label="logout"
+                  className={styles.navIconButton}
+                  onClick={openRequests}
+                  aria-label={`Friend requests${friendReqCount ? `, ${friendReqCount} new` : ''}`}
+                  aria-controls={isDrawerOpen ? 'friend-requests-drawer' : undefined}
+                  aria-expanded={isDrawerOpen}
                 >
-                  <LogoutIcon style={{ color: "white" }} />
+                  <Badge
+                    badgeContent={friendReqCount || null}
+                    max={99}
+                    classes={{ badge: styles.notificationBadge }}
+                  >
+                    <NotificationsRounded />
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip title="Your profile" arrow>
+                <IconButton
+                  className={styles.profileButton}
+                  onClick={openProfile}
+                  aria-label="Open your profile"
+                  aria-controls={profileOpen ? 'profile-modal' : undefined}
+                  aria-expanded={profileOpen}
+                >
+                  <Avatar className={styles.navAvatar} src={profileImage} alt="">
+                    {profile?.name?.[0]?.toUpperCase() || <AccountCircleRounded />}
+                  </Avatar>
+                  <span className={styles.profileCopy}>
+                    <span className={styles.profileGreeting}>Welcome back</span>
+                    <span className={styles.profileName}>{profile?.name || 'Your profile'}</span>
+                  </span>
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip title="Log out" arrow>
+                <IconButton className={styles.navIconButton} onClick={logout} aria-label="Log out">
+                  <LogoutRounded />
                 </IconButton>
               </Tooltip>
             </Box>
-            <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
-              <IconButton size="large" aria-label="show more">
-                <MoreIcon style={{ color: 'white' }} />
+
+            <Box className={styles.mobileActions}>
+              <IconButton
+                className={styles.navIconButton}
+                onClick={(event) => setMobileMenuAnchor(event.currentTarget)}
+                aria-label="Open account menu"
+                aria-controls={mobileMenuOpen ? 'mobile-account-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={mobileMenuOpen}
+              >
+                <MoreVertRounded />
               </IconButton>
             </Box>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Drawer Component */}
-      <SideDrawer heading={"Friend Requests"} secondaryHeading={"List of the friend requests"} alignment={"right"} isDrawerOpen={isDrawerOpen} setIsDrawerOpen={setIsDrawerOpen}>
+      <Menu
+        id="mobile-account-menu"
+        anchorEl={mobileMenuAnchor}
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        PaperProps={{ className: styles.mobileMenuPaper }}
+        MenuListProps={{ 'aria-label': 'Account actions' }}
+      >
+        <MenuItem className={styles.mobileMenuItem} onClick={openRequests}>
+          <NotificationsRounded fontSize="small" />
+          <span>Friend requests</span>
+          {friendReqCount > 0 && <span className={styles.menuCount}>{friendReqCount}</span>}
+        </MenuItem>
+        <MenuItem className={styles.mobileMenuItem} onClick={openProfile}>
+          <AccountCircleRounded fontSize="small" />
+          <span>Your profile</span>
+        </MenuItem>
+        <MenuItem className={`${styles.mobileMenuItem} ${styles.logoutMenuItem}`} onClick={logout}>
+          <LogoutRounded fontSize="small" />
+          <span>Log out</span>
+        </MenuItem>
+      </Menu>
+
+      <SideDrawer
+        id="friend-requests-drawer"
+        heading="Friend requests"
+        secondaryHeading="People who would love to connect with you"
+        alignment="right"
+        isDrawerOpen={isDrawerOpen}
+        setIsDrawerOpen={setIsDrawerOpen}
+      >
         {friendReq.length > 0 ? (
-          <List sx={{ marginTop: 1, flexGrow: 1 }}>
-            {friendReq.map((request) => (
-              <ListItem
-                key={request.id}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: 1,
-                  borderRadius: 3,
-                  backgroundColor: '#f5f5f5',
-                  marginY: 1
-                }}
-              >
-                {/* Avatar with reduced spacing */}
-                <Avatar src={request?.avatar} alt={request?.SentRequests?.name} sx={{ marginRight: 1, width: 40, height: 40 }} />
+          <List className={styles.requestList} disablePadding aria-label="Friend requests">
+            {friendReq.map((request) => {
+              const user = request?.SentRequests;
+              const isOnline = Boolean(isOnlineUsers[user?.id]);
+              const acceptKey = `accept-${user?.id}`;
+              const rejectKey = `reject-${user?.id}`;
+              const isPending = pendingRequest === acceptKey || pendingRequest === rejectKey;
 
-                {/* Friend Name */}
-                <Box sx={{ flex: 1 }}>
-                  <ListItemText
-                    primary={request?.SentRequests?.name}
-                    primaryTypographyProps={{ sx: { fontWeight: 'bold' } }}
+              return (
+                <ListItem className={styles.requestCard} key={request.id || user?.id}>
+                  <div className={styles.avatarShell}>
+                    <Avatar src={request?.avatar || user?.avatar} alt={user?.name || 'User'}>
+                      {user?.name?.[0]?.toUpperCase()}
+                    </Avatar>
+                    <span
+                      className={`${styles.presenceDot} ${isOnline ? styles.online : styles.offline}`}
+                      aria-hidden="true"
+                    />
+                  </div>
 
-                  />
-                  <Typography
-                    sx={{
-                      fontSize: '0.6rem', // Smaller font size
-                      color: 'gray', // Greyish color
-                      fontWeight: 250, // Light font weight
-                      marginBottom: 1,
-                    }}
-                  >
-                    {/* {request.createdAt?.split('T')[0]} */}
-                    <div style={{ display: 'flex', gap: '2px', alignItems: 'center', marginTop: '-5px', padding: '0' }}>
-                      <div
-                        className={isOnlineUsers[request?.SentRequests?.id] ? "online" : "offline"}
-                        style={{ margin: '0' }}
-                      >
+                  <Box className={styles.requestInfo}>
+                    <ListItemText
+                      className={styles.requestName}
+                      primary={user?.name || 'ChitTalk user'}
+                    />
+                    <Typography className={styles.presenceLabel} component="span">
+                      {isOnline ? 'Online now' : 'Currently offline'}
+                    </Typography>
+                  </Box>
 
-                      </div>
-                      <div>
-                        {isOnlineUsers[request?.SentRequests?.id] ? "Online" : "Offline"}
-
-                      </div>
-
-                    </div>
-                  </Typography>
-                </Box>
-
-                {/* Action Buttons */}
-                <Box sx={{ display: 'flex', gap: 0.5 }}>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    size="small"
-                    sx={{ minWidth: '50px', fontSize: '0.65rem', padding: '2px 8px' }}
-                    onClick={() => { handleLaterReqStatus('accept', request.SentRequests.id).then(res => fetchFriendReq()) }}
-                  >
-                    Accept
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    size="small"
-                    sx={{ minWidth: '50px', fontSize: '0.65rem', padding: '2px 8px' }}
-                    onClick={() => { handleLaterReqStatus('reject', request.SentRequests.id).then(res => fetchFriendReq()) }}
-                  >
-                    Reject
-                  </Button>
-                </Box>
-              </ListItem>
-            ))}
+                  <Box className={styles.requestActions}>
+                    <Tooltip title={`Accept ${user?.name || 'request'}`} arrow>
+                      <span>
+                        <Button
+                          className={`${styles.requestAction} ${styles.acceptAction}`}
+                          onClick={() => handleRequestAction('accept', user.id)}
+                          disabled={isPending || !user?.id || typeof handleLaterReqStatus !== 'function'}
+                          aria-label={`Accept friend request from ${user?.name || 'user'}`}
+                        >
+                          <CheckRounded fontSize="small" />
+                          <span>Accept</span>
+                        </Button>
+                      </span>
+                    </Tooltip>
+                    <Tooltip title={`Decline ${user?.name || 'request'}`} arrow>
+                      <span>
+                        <Button
+                          className={`${styles.requestAction} ${styles.rejectAction}`}
+                          onClick={() => handleRequestAction('reject', user.id)}
+                          disabled={isPending || !user?.id || typeof handleLaterReqStatus !== 'function'}
+                          aria-label={`Decline friend request from ${user?.name || 'user'}`}
+                        >
+                          <CloseRounded fontSize="small" />
+                          <span>Decline</span>
+                        </Button>
+                      </span>
+                    </Tooltip>
+                  </Box>
+                </ListItem>
+              );
+            })}
           </List>
-
         ) : (
-          <NoDataFound heading={"No friend requests received"} text={"You haven't received any friend requests, connect with strangers and behave accordingly to get friend requests"} />
-
+          <NoDataFound
+            heading="You’re all caught up"
+            text="New friend requests will appear here. Keep chatting and meeting new people."
+          />
         )}
       </SideDrawer>
 
-      {/*Profile modal*/}
-      <ProfileModal profile={profile} profileOpen={profileOpen} setProfileOpen={setProfileOpen} />
-
+      <ProfileModal
+        profile={profile}
+        profileOpen={profileOpen}
+        setProfileOpen={setProfileOpen}
+      />
     </>
   );
 };
